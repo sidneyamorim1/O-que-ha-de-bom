@@ -1,12 +1,43 @@
 # O que há de Bom
 
-App complementar de um jogo de tabuleiro físico. O jogador escolhe a idade, informa a cor que saiu na roleta física do tabuleiro, e o app sorteia e lê em voz alta uma história cadastrada para aquela combinação de idade + cor.
+App complementar de um jogo de tabuleiro físico. O jogador escolhe a idade, informa a cor que saiu na roleta física do tabuleiro, e o app sorteia uma história cadastrada para aquela combinação de idade + cor — lida em voz alta pelo navegador ou, se houver, tocando um MP3 gravado.
+
+## Status atual (14/09/2026)
+
+- **App em produção:** https://o-que-ha-de-bom.netlify.app/
+- **Repositório:** `git@github.com:sidneyamorim1/O-que-ha-de-bom.git` (branch `main`, conectado ao Netlify — todo push faz deploy automático)
+- **Supabase:** projeto `https://nswhggxoqrnknzjkggqv.supabase.co`, schema já aplicado (tabela `historias` + bucket `audios`)
+- **Histórias cadastradas:** só a faixa **10-16** está completa (todas as 6 cores). As faixas 17-20, 21-30, 31-40, 41-50 e 51-60 ainda estão **vazias**.
+- **Usuário admin:** já criado no Supabase Auth (email/senha só o usuário sabe, não fica em nenhum arquivo do projeto).
+- **Pendências conhecidas:** cadastrar histórias das faixas etárias restantes.
+
+### Continuando em outro computador
+
+```bash
+git clone git@github.com:sidneyamorim1/O-que-ha-de-bom.git
+cd O-que-ha-de-bom
+npm install
+cp .env.example .env
+```
+
+Preencha o `.env` com:
+```
+VITE_SUPABASE_URL=https://nswhggxoqrnknzjkggqv.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zd2hnZ3hvcXJua256amtnZ3F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MTEyNzksImV4cCI6MjEwNDk4NzI3OX0.QTn5AT4yHz5Og3oGuFxaMHeYMC8318re4Sd7UO7P2Us
+```
+(essa é a chave pública "anon" do projeto — segura de expor, protegida pelas políticas de RLS do banco).
+
+Depois: `npm run dev`.
+
+**Atenção ao clonar via SSH:** se esse computador novo não tiver a chave SSH da conta `sidneyamorim1` cadastrada no GitHub, o `git clone` acima vai falhar. Nesse caso use a URL HTTPS (`https://github.com/sidneyamorim1/O-que-ha-de-bom.git`) e autentique com usuário/token do GitHub, ou cadastre a chave SSH dessa máquina na conta primeiro.
+
+O Netlify já está configurado (env vars + deploy automático) — não precisa mexer em nada lá pra continuar o desenvolvimento, só dar `git push` que ele republica sozinho.
 
 ## Stack
 
 - React + Vite
-- Supabase (Postgres + Auth) — sem Storage, as histórias são só texto
-- Leitura em voz alta via Web Speech API do navegador (sem áudio gravado)
+- Supabase (Postgres + Auth + Storage)
+- Leitura em voz alta via Web Speech API do navegador, com opção de subir um MP3 gravado (toca no lugar da leitura por voz quando presente)
 - Hospedagem: Netlify
 
 ## Rodando localmente
@@ -18,26 +49,26 @@ cp .env.example .env
 npm run dev
 ```
 
-## Configurando o Supabase
+## Configurando o Supabase (num projeto novo, do zero)
 
 1. Crie um projeto em [supabase.com](https://supabase.com).
-2. Vá em **SQL Editor** e rode o conteúdo de [`supabase/schema.sql`](supabase/schema.sql). Isso cria a tabela `historias` e as políticas de acesso (leitura pública, escrita só para usuários autenticados).
+2. Vá em **SQL Editor** e rode o conteúdo de [`supabase/schema.sql`](supabase/schema.sql). Isso cria a tabela `historias`, o bucket de Storage `audios` e as políticas de acesso (leitura pública, escrita só para usuários autenticados).
 3. Vá em **Authentication > Users > Add user** e crie o usuário administrador (email + senha) — é o login usado em `/admin/login`.
 4. Em **Project Settings > API**, copie a **Project URL** e a **anon public key** para o seu `.env` (`VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`).
 
 ## Cadastrando histórias
 
-Acesse `/admin/login`, entre com o usuário criado no Supabase, e cadastre histórias em `/admin`: escolha a faixa etária, a cor, um título opcional e o texto. Cada combinação de idade + cor pode ter várias histórias — uma é sorteada aleatoriamente a cada jogada.
+Acesse `/admin/login`, entre com o usuário criado no Supabase, e cadastre histórias em `/admin`: escolha a faixa etária, a cor, um título opcional, o texto e, se quiser, um MP3 gravado. Cada combinação de idade + cor pode ter várias histórias — uma é sorteada aleatoriamente a cada jogada. Quando não há MP3, o texto é lido em voz alta pelo navegador.
 
 ## Deploy no Netlify
 
 1. Conecte este repositório no Netlify (o `netlify.toml` já define build command `npm run build` e publish dir `dist`, com redirect de SPA).
-2. Em **Site settings > Environment variables**, adicione `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com os mesmos valores do seu `.env`.
-3. Faça o deploy.
+2. Em **Site settings > Environment variables**, adicione `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com os mesmos valores do seu `.env`. **Atenção ao nome exato** — precisa começar com `VITE_` (sem isso o Vite não expõe a variável pro navegador e o app quebra com "supabaseUrl is required").
+3. Faça o deploy. Se mudar env vars depois de já ter feito deploy, use **Trigger deploy > Clear cache and deploy site** pra garantir que o novo build pegue os valores.
 
 ## Fluxo do app
 
 1. `/` — seleção de idade (6 faixas fixas).
-2. `/roleta` — seleção da cor sorteada na roleta física.
-3. `/historia` — sorteio de uma história cadastrada para aquela idade + cor, com botão para ouvir em voz alta.
-4. `/admin` (protegido por login) — CRUD de histórias.
+2. `/roleta` — seleção da cor sorteada na roleta física. A idade fica fixa aqui; só muda se o jogador clicar em "← Trocar idade".
+3. `/historia` — sorteio de uma história cadastrada para aquela idade + cor. Botão "Jogar novamente" volta pra `/roleta` mantendo a idade.
+4. `/admin` (protegido por login) — CRUD de histórias, com upload opcional de MP3.
