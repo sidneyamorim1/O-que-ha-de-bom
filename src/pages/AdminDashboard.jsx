@@ -2,8 +2,33 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { CORES, FAIXAS_ETARIAS, corInfo, labelFaixaEtaria } from '../constants/gameData'
+import AudioPlayer from '../components/AudioPlayer'
 
-const EMPTY_FORM = { id: null, faixa_etaria: FAIXAS_ETARIAS[0].value, cor: CORES[0].value, titulo: '', texto: '' }
+const EMPTY_FORM = {
+  id: null,
+  faixa_etaria: FAIXAS_ETARIAS[0].value,
+  cor: CORES[0].value,
+  titulo: '',
+  texto: '',
+  audioUrl: null,
+  audioFile: null,
+  removeAudio: false,
+}
+
+const AUDIO_BUCKET = 'audios'
+
+function extractStoragePath(publicUrl) {
+  const marker = `/storage/v1/object/public/${AUDIO_BUCKET}/`
+  const idx = publicUrl?.indexOf(marker)
+  if (idx === -1 || idx === undefined) return null
+  return publicUrl.slice(idx + marker.length)
+}
+
+async function removeAudioFile(publicUrl) {
+  const path = extractStoragePath(publicUrl)
+  if (!path) return
+  await supabase.storage.from(AUDIO_BUCKET).remove([path])
+}
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -47,6 +72,9 @@ export default function AdminDashboard() {
       cor: historia.cor,
       titulo: historia.titulo ?? '',
       texto: historia.texto,
+      audioUrl: historia.audio_url ?? null,
+      audioFile: null,
+      removeAudio: false,
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -55,24 +83,45 @@ export default function AdminDashboard() {
     setForm(EMPTY_FORM)
   }
 
-  async function handleExcluir(id) {
+  async function handleExcluir(id, audioUrl) {
     if (!window.confirm('Excluir esta história? Essa ação não pode ser desfeita.')) return
     const { error } = await supabase.from('historias').delete().eq('id', id)
     if (error) {
       window.alert('Erro ao excluir: ' + error.message)
       return
     }
+    if (audioUrl) await removeAudioFile(audioUrl)
     carregar()
   }
 
   async function handleSubmit(e) {
     e.preventDefault()
     setSaving(true)
+
+    let audioUrl = form.removeAudio ? null : form.audioUrl
+
+    if (form.audioFile) {
+      const path = `${crypto.randomUUID()}-${form.audioFile.name}`
+      const { error: uploadError } = await supabase.storage
+        .from(AUDIO_BUCKET)
+        .upload(path, form.audioFile, { contentType: form.audioFile.type || 'audio/mpeg' })
+
+      if (uploadError) {
+        setSaving(false)
+        window.alert('Erro ao enviar o áudio: ' + uploadError.message)
+        return
+      }
+
+      const { data: publicUrlData } = supabase.storage.from(AUDIO_BUCKET).getPublicUrl(path)
+      audioUrl = publicUrlData.publicUrl
+    }
+
     const payload = {
       faixa_etaria: form.faixa_etaria,
       cor: form.cor,
       titulo: form.titulo.trim() || null,
       texto: form.texto.trim(),
+      audio_url: audioUrl,
     }
 
     const { error } = form.id
@@ -84,6 +133,12 @@ export default function AdminDashboard() {
     if (error) {
       window.alert('Erro ao salvar: ' + error.message)
       return
+    }
+
+    // Se trocou ou removeu o áudio antigo, limpa o arquivo anterior do storage
+    const trocouAudio = form.audioFile || form.removeAudio
+    if (trocouAudio && form.audioUrl && form.audioUrl !== audioUrl) {
+      await removeAudioFile(form.audioUrl)
     }
 
     setForm(EMPTY_FORM)
@@ -142,6 +197,39 @@ export default function AdminDashboard() {
               required
             />
           </label>
+          <p className="form-hint form-field--full">
+            O texto acima é sempre exibido e é o que o leitor de voz do navegador lê em voz alta. Se quiser,
+            envie um MP3 gravado abaixo — quando houver um áudio, ele é tocado no lugar do leitor de voz.
+          </p>
+          <label className="form-field form-field--full">
+            Áudio MP3 (opcional)
+            <input
+              type="file"
+              accept="audio/mpeg,audio/mp3,.mp3"
+              onChange={(e) =>
+                setForm((f) => ({ ...f, audioFile: e.target.files?.[0] ?? null, removeAudio: false }))
+              }
+            />
+          </label>
+          {form.audioFile && (
+            <p className="form-hint form-field--full">Novo arquivo selecionado: {form.audioFile.name}</p>
+          )}
+          {!form.audioFile && form.audioUrl && !form.removeAudio && (
+            <div className="form-field--full audio-atual">
+              <span>Áudio atual:</span>
+              <AudioPlayer src={form.audioUrl} />
+              <button
+                type="button"
+                className="btn btn--perigo"
+                onClick={() => setForm((f) => ({ ...f, removeAudio: true }))}
+              >
+                Remover áudio
+              </button>
+            </div>
+          )}
+          {form.removeAudio && (
+            <p className="form-hint form-field--full">O áudio será removido ao salvar.</p>
+          )}
           <div className="form-field--full form-actions">
             <button type="submit" className="btn btn--primary" disabled={saving}>
               {saving ? 'Salvando...' : form.id ? 'Salvar alterações' : 'Adicionar história'}
@@ -200,12 +288,15 @@ export default function AdminDashboard() {
                   </p>
                   {h.titulo && <p className="lista-historias__titulo">{h.titulo}</p>}
                   <p className="lista-historias__texto">{h.texto}</p>
+                  {h.audio_url && (
+                    <p className="lista-historias__meta lista-historias__meta--audio">🎵 tem áudio gravado</p>
+                  )}
                 </div>
                 <div className="lista-historias__acoes">
                   <button type="button" className="btn" onClick={() => handleEditar(h)}>
                     Editar
                   </button>
-                  <button type="button" className="btn btn--perigo" onClick={() => handleExcluir(h.id)}>
+                  <button type="button" className="btn btn--perigo" onClick={() => handleExcluir(h.id, h.audio_url)}>
                     Excluir
                   </button>
                 </div>

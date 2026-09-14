@@ -9,8 +9,12 @@ create table if not exists public.historias (
   cor text not null check (cor in ('azul', 'amarelo', 'vermelho', 'roxo', 'verde', 'laranja')),
   titulo text,
   texto text not null,
+  audio_url text,
   created_at timestamptz not null default now()
 );
+
+-- Se a tabela já existia (de uma versão anterior deste schema), garante a coluna nova:
+alter table public.historias add column if not exists audio_url text;
 
 create index if not exists historias_faixa_cor_idx on public.historias (faixa_etaria, cor);
 
@@ -46,6 +50,40 @@ create policy "historias_delete_authenticated"
   for delete
   to authenticated
   using (true);
+
+-- Bucket de Storage para os MP3 opcionais (upload feito pelo admin)
+insert into storage.buckets (id, name, public)
+values ('audios', 'audios', true)
+on conflict (id) do nothing;
+
+drop policy if exists "audios_select_public" on storage.objects;
+create policy "audios_select_public"
+  on storage.objects
+  for select
+  to anon, authenticated
+  using (bucket_id = 'audios');
+
+drop policy if exists "audios_insert_authenticated" on storage.objects;
+create policy "audios_insert_authenticated"
+  on storage.objects
+  for insert
+  to authenticated
+  with check (bucket_id = 'audios');
+
+drop policy if exists "audios_update_authenticated" on storage.objects;
+create policy "audios_update_authenticated"
+  on storage.objects
+  for update
+  to authenticated
+  using (bucket_id = 'audios')
+  with check (bucket_id = 'audios');
+
+drop policy if exists "audios_delete_authenticated" on storage.objects;
+create policy "audios_delete_authenticated"
+  on storage.objects
+  for delete
+  to authenticated
+  using (bucket_id = 'audios');
 
 -- Depois de rodar este script, crie o usuário admin em:
 -- Authentication > Users > Add user (email + senha)

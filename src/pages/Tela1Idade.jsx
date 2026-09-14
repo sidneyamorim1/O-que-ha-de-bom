@@ -15,7 +15,11 @@ export default function Tela1Idade() {
   return (
     <div className="page">
       <div className="card">
-        <h1 className="titulo">O que há de BOM?</h1>
+        <h1 className="titulo">
+          O que há de
+          <br />
+          BOM?
+        </h1>
         <p className="subtitulo">Selecione sua idade</p>
         <div className="grid-idades">
           {FAIXAS_ETARIAS.map((faixa) => (

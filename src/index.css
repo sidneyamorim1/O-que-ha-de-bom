@@ -48,10 +48,10 @@ body {
 
 .card {
   width: 100%;
-  max-width: 420px;
+  max-width: 700px;
   background: var(--card-bg);
-  border-radius: 16px;
-  padding: 28px 24px 32px;
+  border-radius: 23px;
+  padding: 47px 42px 52px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   text-align: center;
 }
@@ -68,32 +68,33 @@ body {
 .titulo {
   background: var(--verde);
   color: #fff;
-  font-size: 26px;
-  font-weight: 800;
-  line-height: 1.2;
-  padding: 18px 20px;
-  border-radius: 10px;
-  margin: 0 0 20px;
+  font-family: 'Fredoka', system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.25;
+  padding: 29px 34px;
+  border-radius: 26px;
+  margin: 0 0 26px;
 }
 
 .titulo--sm {
-  font-size: 18px;
-  padding: 12px 16px;
+  font-size: 20px;
+  padding: 14px 18px;
   margin: 0;
-  border-radius: 8px;
+  border-radius: 14px;
 }
 
 .subtitulo {
   font-weight: 700;
-  font-size: 15px;
-  margin: 0 0 16px;
+  font-size: 20px;
+  margin: 0 0 21px;
   text-align: center;
 }
 
 .grid-idades {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 13px;
   justify-content: center;
 }
 
@@ -101,12 +102,12 @@ body {
   background: var(--verde);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
-  font-size: 13px;
+  border-radius: 10px;
+  padding: 13px 18px;
+  font-size: 17px;
   font-weight: 600;
   cursor: pointer;
-  min-width: 64px;
+  min-width: 83px;
   transition: background 0.15s ease;
 }
 
@@ -117,15 +118,15 @@ body {
 .grid-cores {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 13px;
   justify-content: center;
-  margin-bottom: 20px;
+  margin-bottom: 26px;
 }
 
 .color-swatch {
-  width: 46px;
-  height: 36px;
-  border-radius: 6px;
+  width: 78px;
+  height: 61px;
+  border-radius: 10px;
   border: 2px solid transparent;
   cursor: pointer;
   padding: 0;
@@ -140,26 +141,26 @@ body {
 }
 
 .color-swatch--display {
-  width: 60px;
-  height: 40px;
-  margin: 0 auto 18px;
+  width: 101px;
+  height: 68px;
+  margin: 0 auto 23px;
   cursor: default;
 }
 
 .btn-voltar {
-  margin-top: 4px;
+  margin-top: 5px;
   background: none;
   border: none;
   color: var(--texto-suave);
-  font-size: 13px;
+  font-size: 17px;
   cursor: pointer;
   text-decoration: underline;
 }
 
 .mensagem {
   color: var(--texto-suave);
-  font-size: 14px;
-  margin: 12px 0;
+  font-size: 18px;
+  margin: 16px 0;
 }
 
 .mensagem--erro {
@@ -167,68 +168,40 @@ body {
 }
 
 .historia-titulo {
-  font-size: 18px;
-  margin: 4px 0 12px;
+  font-size: 23px;
+  margin: 5px 0 16px;
 }
 
 .historia-texto {
   text-align: left;
   white-space: pre-wrap;
-  font-size: 15px;
+  font-size: 20px;
   line-height: 1.6;
-  margin: 16px 0;
+  margin: 21px 0;
 }
 
 .tts-player {
-  margin: 8px 0 4px;
+  margin: 10px 0 5px;
 }
 
 .tts-controls {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   justify-content: center;
 }
 
 .tts-unsupported {
-  font-size: 13px;
+  font-size: 17px;
   color: var(--texto-suave);
-  margin: 8px 0;
-}
-
-.banco-historias {
-  margin: 20px 0 24px;
-  background: #f6f6f6;
-  border-radius: 10px;
-  padding: 14px;
-}
-
-.banco-historias__label {
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-  margin: 0 0 10px;
-  color: var(--texto-suave);
-}
-
-.banco-historias__cards {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.banco-historias__card {
-  width: 40px;
-  height: 60px;
-  background: #6b4e4e;
-  border-radius: 4px;
+  margin: 10px 0;
 }
 
 .btn {
   background: #fff;
   border: 1px solid var(--borda);
-  border-radius: 8px;
-  padding: 9px 16px;
-  font-size: 14px;
+  border-radius: 10px;
+  padding: 12px 21px;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
   color: var(--texto);
@@ -308,6 +281,31 @@ body {
 .form-actions {
   display: flex;
   gap: 10px;
+}
+
+.form-hint {
+  font-size: 12px;
+  color: var(--texto-suave);
+  margin: -4px 0 0;
+}
+
+.audio-atual {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texto-suave);
+}
+
+.audio-player {
+  max-width: 100%;
+}
+
+.lista-historias__meta--audio {
+  margin-top: 4px;
+  text-transform: none;
 }
 
 .admin-header {

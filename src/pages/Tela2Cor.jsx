@@ -12,6 +12,11 @@ export default function Tela2Cor() {
     if (!selectedAge) navigate('/', { replace: true })
   }, [selectedAge, navigate])
 
+  useEffect(() => {
+    setSelectedColor(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   function handleSelect(cor) {
     setSelectedColor(cor.value)
     navigate('/historia')
@@ -22,7 +27,11 @@ export default function Tela2Cor() {
   return (
     <div className="page">
       <div className="card">
-        <h1 className="titulo">O que há de BOM?</h1>
+        <h1 className="titulo">
+          O que há de
+          <br />
+          BOM?
+        </h1>
         <p className="subtitulo">Selecione a cor da roleta</p>
         <div className="grid-cores">
           {CORES.map((cor) => (

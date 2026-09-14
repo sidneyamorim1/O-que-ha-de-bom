@@ -4,10 +4,11 @@ import { supabase } from '../lib/supabaseClient'
 import { corInfo, labelFaixaEtaria } from '../constants/gameData'
 import { useApp } from '../context/AppContext'
 import TextToSpeechPlayer from '../components/TextToSpeechPlayer'
+import AudioPlayer from '../components/AudioPlayer'
 
 export default function Tela3Historia() {
   const navigate = useNavigate()
-  const { selectedAge, selectedColor, resetSelecao } = useApp()
+  const { selectedAge, selectedColor } = useApp()
   const [status, setStatus] = useState('loading') // loading | ok | empty | error
   const [historia, setHistoria] = useState(null)
 
@@ -22,7 +23,7 @@ export default function Tela3Historia() {
 
     supabase
       .from('historias')
-      .select('id, titulo, texto')
+      .select('id, titulo, texto, audio_url')
       .eq('faixa_etaria', selectedAge)
       .eq('cor', selectedColor)
       .then(({ data, error }) => {
@@ -47,8 +48,7 @@ export default function Tela3Historia() {
   }, [selectedAge, selectedColor, navigate])
 
   function handleJogarNovamente() {
-    resetSelecao()
-    navigate('/')
+    navigate('/roleta')
   }
 
   const cor = corInfo(selectedColor)
@@ -56,7 +56,11 @@ export default function Tela3Historia() {
   return (
     <div className="page">
       <div className="card">
-        <h1 className="titulo">O que há de BOM?</h1>
+        <h1 className="titulo">
+          O que há de
+          <br />
+          BOM?
+        </h1>
         <p className="subtitulo">Cor escolhida</p>
         {cor && <div className="color-swatch color-swatch--display" style={{ backgroundColor: cor.hex }} />}
 
@@ -77,20 +81,14 @@ export default function Tela3Historia() {
         {status === 'ok' && historia && (
           <>
             {historia.titulo && <h2 className="historia-titulo">{historia.titulo}</h2>}
-            <TextToSpeechPlayer texto={historia.texto} />
+            {historia.audio_url ? (
+              <AudioPlayer src={historia.audio_url} />
+            ) : (
+              <TextToSpeechPlayer texto={historia.texto} />
+            )}
             <p className="historia-texto">{historia.texto}</p>
           </>
         )}
-
-        <div className="banco-historias">
-          <p className="banco-historias__label">Banco de histórias</p>
-          <div className="banco-historias__cards">
-            <div className="banco-historias__card" />
-            <div className="banco-historias__card" />
-            <div className="banco-historias__card" />
-            <div className="banco-historias__card" />
-          </div>
-        </div>
 
         <button type="button" className="btn btn--primary btn--full" onClick={handleJogarNovamente}>
           Jogar novamente

@@ -25,7 +25,11 @@ export default function AdminLogin() {
   return (
     <div className="page">
       <div className="card card--admin">
-        <h1 className="titulo">O que há de BOM?</h1>
+        <h1 className="titulo">
+          O que há de
+          <br />
+          BOM?
+        </h1>
         <p className="subtitulo">Login administrativo</p>
         <form className="form" onSubmit={handleSubmit}>
           <label className="form-field">
