@@ -7,10 +7,21 @@ App complementar de um jogo de tabuleiro físico. O jogador escolhe a idade, inf
 - **App em produção:** https://oquehadebom.netlify.app/
 - **Repositório:** `git@github.com:sidneyamorim1/O-que-ha-de-bom.git` (branch `main`, conectado ao Netlify — todo push faz deploy automático)
 - **Supabase:** projeto `https://nswhggxoqrnknzjkggqv.supabase.co`, schema já aplicado (tabela `historias` + buckets `audios` e `imagens`)
-- **Histórias cadastradas:** só a faixa **10-16** está completa (todas as 6 cores, com imagem ilustrativa). As faixas 17-20, 21-30, 31-40, 41-50 e 51-60 ainda estão **vazias**.
+- **Histórias cadastradas:** só a faixa **10-16** está completa (11 histórias, todas as 6 cores, cada uma com imagem ilustrativa gerada em SVG). As faixas 17-20, 21-30, 31-40, 41-50 e 51-60 ainda estão **vazias**.
 - **Usuário admin:** já criado no Supabase Auth (email/senha só o usuário sabe, não fica em nenhum arquivo do projeto).
-- **Vozes de IA (Google Cloud TTS):** admin tem um campo pra testar as 30 vozes Chirp3-HD em pt-BR (rodando via Netlify Function, chave `GOOGLE_TTS_API_KEY` configurada nas env vars do Netlify e no `.env` local). Ainda não integrado ao fluxo de gerar áudio definitivo de uma história — hoje é só um testador.
-- **Pendências conhecidas:** cadastrar histórias das faixas etárias restantes; decidir se/como usar a voz do Google TTS pra gerar o áudio definitivo de cada história (hoje o admin só testa a voz, não salva o áudio gerado).
+- **Narração por IA (Google Cloud TTS, voz Chirp3-HD):** funcionalidade completa no admin —
+  - Testador de vozes (30 vozes pt-BR) no topo do `/admin`, com play automático ao trocar.
+  - Voz configurável em dois níveis, salvos no `localStorage` do navegador (por isso é por computador/navegador, não fica no banco): um **padrão geral** e, opcionalmente, uma **voz específica por faixa etária** que sobrescreve o padrão só naquela faixa.
+  - Botão **"Gerar narração com IA"** em cada história (usa a voz da faixa dela) — só fica valendo depois de clicar em "Salvar".
+  - Botão **"Aplicar em lote"** — gera e substitui de uma vez o áudio de todas as histórias de uma faixa (ou de todas as faixas sem voz específica, no escopo "padrão geral"). Repetível a qualquer momento.
+  - Projeto do Google Cloud usado: `spatial-tempo-415713` (org `genianti.org`, conta "OasisBR") — Cloud Text-to-Speech API ativada lá, chave de API restrita só a essa API.
+  - Roda via Netlify Function (`netlify/functions/tts.js`, endpoint `/api/tts`) — chave `GOOGLE_TTS_API_KEY` nunca vai pro navegador. Em dev local, um middleware equivalente em `vite.config.js` cobre o mesmo endpoint.
+  - Custo: voz Chirp3-HD tem 1 milhão de caracteres grátis por mês; no volume atual de histórias, uso normal não deve ultrapassar isso (ver conversa/commits pra detalhes de cálculo).
+- **Pendências conhecidas:** cadastrar histórias das faixas etárias restantes (17-20 até 51-60) — ver seção "Cadastrando histórias em lote" abaixo pro formato que o Claude consegue processar direto; decidir se a voz padrão/por faixa configurada agora deve ser fixada em algum lugar compartilhado (hoje é só local no navegador de quem configura, então cada computador que acessar o admin pode ter uma preferência diferente até configurar de novo).
+
+### Cadastrando histórias em lote (com ajuda do Claude)
+
+Pra pedir pro Claude cadastrar várias histórias novas de uma vez (com áudio e/ou imagem), o formato mais fácil é uma pasta local com uma planilha/CSV (colunas: `faixa_etaria`, `cor`, `titulo`, `texto`, `audio_arquivo`, `imagem_arquivo`) mais os arquivos de mídia referenciados nela. Detalhes de exemplo na conversa do dia 15/09/2026 com o Claude Code — ou só pergunte de novo, ele reexplica.
 
 ### Continuando em outro computador
 
@@ -40,7 +51,7 @@ O Netlify já está configurado (env vars + deploy automático) — não precisa
 - React + Vite
 - Supabase (Postgres + Auth + Storage)
 - Leitura em voz alta via Web Speech API do navegador, com opção de subir um MP3 gravado (toca no lugar da leitura por voz quando presente) ou uma imagem ilustrativa
-- Google Cloud Text-to-Speech (vozes Chirp3-HD) — testador de vozes no admin, via Netlify Function (`netlify/functions/tts.js`)
+- Google Cloud Text-to-Speech (vozes Chirp3-HD) — testador de vozes, geração de narração por história e aplicação em lote por faixa etária, tudo no admin, via Netlify Function (`netlify/functions/tts.js`)
 - Hospedagem: Netlify
 
 ## Rodando localmente
@@ -61,7 +72,7 @@ npm run dev
 
 ## Cadastrando histórias
 
-Acesse `/admin/login`, entre com o usuário criado no Supabase, e cadastre histórias em `/admin`: escolha a faixa etária, a cor, um título opcional, o texto e, se quiser, um MP3 gravado e/ou uma imagem ilustrativa. Cada combinação de idade + cor pode ter várias histórias — uma é sorteada aleatoriamente a cada jogada. Quando não há MP3, o texto é lido em voz alta pelo navegador. O admin também tem um campo pra testar as vozes do Google Cloud TTS (só testa, ainda não gera o áudio definitivo da história — isso é uma pendência).
+Acesse `/admin/login`, entre com o usuário criado no Supabase, e cadastre histórias em `/admin`: escolha a faixa etária, a cor, um título opcional, o texto e, se quiser, um MP3 gravado (manual ou gerado pelo botão "Gerar narração com IA") e/ou uma imagem ilustrativa. Cada combinação de idade + cor pode ter várias histórias — uma é sorteada aleatoriamente a cada jogada. Quando não há áudio, o texto é lido em voz alta pelo navegador. O testador de vozes no topo do admin também permite aplicar uma voz a todas as histórias de uma faixa de uma vez (veja a seção "Narração por IA" acima).
 
 ## Deploy no Netlify
 
