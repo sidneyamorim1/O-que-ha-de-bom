@@ -2,14 +2,15 @@
 
 App complementar de um jogo de tabuleiro físico. O jogador escolhe a idade, informa a cor que saiu na roleta física do tabuleiro, e o app sorteia uma história cadastrada para aquela combinação de idade + cor — lida em voz alta pelo navegador ou, se houver, tocando um MP3 gravado.
 
-## Status atual (14/09/2026)
+## Status atual (15/09/2026)
 
-- **App em produção:** https://o-que-ha-de-bom.netlify.app/
+- **App em produção:** https://oquehadebom.netlify.app/
 - **Repositório:** `git@github.com:sidneyamorim1/O-que-ha-de-bom.git` (branch `main`, conectado ao Netlify — todo push faz deploy automático)
-- **Supabase:** projeto `https://nswhggxoqrnknzjkggqv.supabase.co`, schema já aplicado (tabela `historias` + bucket `audios`)
-- **Histórias cadastradas:** só a faixa **10-16** está completa (todas as 6 cores). As faixas 17-20, 21-30, 31-40, 41-50 e 51-60 ainda estão **vazias**.
+- **Supabase:** projeto `https://nswhggxoqrnknzjkggqv.supabase.co`, schema já aplicado (tabela `historias` + buckets `audios` e `imagens`)
+- **Histórias cadastradas:** só a faixa **10-16** está completa (todas as 6 cores, com imagem ilustrativa). As faixas 17-20, 21-30, 31-40, 41-50 e 51-60 ainda estão **vazias**.
 - **Usuário admin:** já criado no Supabase Auth (email/senha só o usuário sabe, não fica em nenhum arquivo do projeto).
-- **Pendências conhecidas:** cadastrar histórias das faixas etárias restantes.
+- **Vozes de IA (Google Cloud TTS):** admin tem um campo pra testar as 30 vozes Chirp3-HD em pt-BR (rodando via Netlify Function, chave `GOOGLE_TTS_API_KEY` configurada nas env vars do Netlify e no `.env` local). Ainda não integrado ao fluxo de gerar áudio definitivo de uma história — hoje é só um testador.
+- **Pendências conhecidas:** cadastrar histórias das faixas etárias restantes; decidir se/como usar a voz do Google TTS pra gerar o áudio definitivo de cada história (hoje o admin só testa a voz, não salva o áudio gerado).
 
 ### Continuando em outro computador
 
@@ -24,8 +25,9 @@ Preencha o `.env` com:
 ```
 VITE_SUPABASE_URL=https://nswhggxoqrnknzjkggqv.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zd2hnZ3hvcXJua256amtnZ3F2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MTEyNzksImV4cCI6MjEwNDk4NzI3OX0.QTn5AT4yHz5Og3oGuFxaMHeYMC8318re4Sd7UO7P2Us
+GOOGLE_TTS_API_KEY=<peça a chave para quem já tem o projeto Google Cloud — não está neste arquivo por segurança>
 ```
-(essa é a chave pública "anon" do projeto — segura de expor, protegida pelas políticas de RLS do banco).
+(a `VITE_SUPABASE_ANON_KEY` é a chave pública "anon" do projeto — segura de expor, protegida pelas políticas de RLS do banco. Já a `GOOGLE_TTS_API_KEY` é secreta de verdade — nunca vai pro navegador, é usada só pela Netlify Function/middleware de dev).
 
 Depois: `npm run dev`.
 
@@ -37,7 +39,8 @@ O Netlify já está configurado (env vars + deploy automático) — não precisa
 
 - React + Vite
 - Supabase (Postgres + Auth + Storage)
-- Leitura em voz alta via Web Speech API do navegador, com opção de subir um MP3 gravado (toca no lugar da leitura por voz quando presente)
+- Leitura em voz alta via Web Speech API do navegador, com opção de subir um MP3 gravado (toca no lugar da leitura por voz quando presente) ou uma imagem ilustrativa
+- Google Cloud Text-to-Speech (vozes Chirp3-HD) — testador de vozes no admin, via Netlify Function (`netlify/functions/tts.js`)
 - Hospedagem: Netlify
 
 ## Rodando localmente
@@ -52,18 +55,18 @@ npm run dev
 ## Configurando o Supabase (num projeto novo, do zero)
 
 1. Crie um projeto em [supabase.com](https://supabase.com).
-2. Vá em **SQL Editor** e rode o conteúdo de [`supabase/schema.sql`](supabase/schema.sql). Isso cria a tabela `historias`, o bucket de Storage `audios` e as políticas de acesso (leitura pública, escrita só para usuários autenticados).
+2. Vá em **SQL Editor** e rode o conteúdo de [`supabase/schema.sql`](supabase/schema.sql). Isso cria a tabela `historias`, os buckets de Storage `audios` e `imagens`, e as políticas de acesso (leitura pública, escrita só para usuários autenticados).
 3. Vá em **Authentication > Users > Add user** e crie o usuário administrador (email + senha) — é o login usado em `/admin/login`.
 4. Em **Project Settings > API**, copie a **Project URL** e a **anon public key** para o seu `.env` (`VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`).
 
 ## Cadastrando histórias
 
-Acesse `/admin/login`, entre com o usuário criado no Supabase, e cadastre histórias em `/admin`: escolha a faixa etária, a cor, um título opcional, o texto e, se quiser, um MP3 gravado. Cada combinação de idade + cor pode ter várias histórias — uma é sorteada aleatoriamente a cada jogada. Quando não há MP3, o texto é lido em voz alta pelo navegador.
+Acesse `/admin/login`, entre com o usuário criado no Supabase, e cadastre histórias em `/admin`: escolha a faixa etária, a cor, um título opcional, o texto e, se quiser, um MP3 gravado e/ou uma imagem ilustrativa. Cada combinação de idade + cor pode ter várias histórias — uma é sorteada aleatoriamente a cada jogada. Quando não há MP3, o texto é lido em voz alta pelo navegador. O admin também tem um campo pra testar as vozes do Google Cloud TTS (só testa, ainda não gera o áudio definitivo da história — isso é uma pendência).
 
 ## Deploy no Netlify
 
-1. Conecte este repositório no Netlify (o `netlify.toml` já define build command `npm run build` e publish dir `dist`, com redirect de SPA).
-2. Em **Site settings > Environment variables**, adicione `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` com os mesmos valores do seu `.env`. **Atenção ao nome exato** — precisa começar com `VITE_` (sem isso o Vite não expõe a variável pro navegador e o app quebra com "supabaseUrl is required").
+1. Conecte este repositório no Netlify (o `netlify.toml` já define build command `npm run build`, publish dir `dist`, o diretório de functions e o redirect `/api/tts`).
+2. Em **Site settings > Environment variables**, adicione `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` e `GOOGLE_TTS_API_KEY` com os mesmos valores do seu `.env`. **Atenção ao nome exato** — as duas primeiras precisam começar com `VITE_` (sem isso o Vite não expõe a variável pro navegador e o app quebra com "supabaseUrl is required"); a `GOOGLE_TTS_API_KEY` **não** deve ter esse prefixo (é secreta, só o servidor/function usa).
 3. Faça o deploy. Se mudar env vars depois de já ter feito deploy, use **Trigger deploy > Clear cache and deploy site** pra garantir que o novo build pegue os valores.
 
 ## Fluxo do app
@@ -71,4 +74,4 @@ Acesse `/admin/login`, entre com o usuário criado no Supabase, e cadastre hist�
 1. `/` — seleção de idade (6 faixas fixas).
 2. `/roleta` — seleção da cor sorteada na roleta física. A idade fica fixa aqui; só muda se o jogador clicar em "← Trocar idade".
 3. `/historia` — sorteio de uma história cadastrada para aquela idade + cor. Botão "Jogar novamente" volta pra `/roleta` mantendo a idade.
-4. `/admin` (protegido por login) — CRUD de histórias, com upload opcional de MP3.
+4. `/admin` (protegido por login) — CRUD de histórias, com upload opcional de MP3 e imagem, e um testador de vozes de IA (Google Cloud TTS).
