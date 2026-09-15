@@ -55,24 +55,7 @@ export default function Tela3Historia() {
 
   return (
     <div className="page">
-      <div className="card">
-        <div className="titulo-wrapper">
-          <span className="titulo-emoji">📖</span>
-          <h1 className="titulo">
-            O que há de
-            <br />
-            BOM?
-          </h1>
-        </div>
-        <p className="subtitulo">Cor escolhida</p>
-
-        {cor && (
-          <div className="color-swatch color-swatch--display">
-            <span className="color-swatch__circle" style={{ backgroundColor: cor.hex }} />
-            <span className="color-swatch__label">{cor.label}</span>
-          </div>
-        )}
-
+      <div className="card card--compacto">
         {status === 'loading' && <p className="mensagem">✨ Sorteando uma história...</p>}
 
         {status === 'error' && (
@@ -90,17 +73,30 @@ export default function Tela3Historia() {
         {status === 'ok' && historia && (
           <div className="historia-reveal">
             {historia.titulo && <h2 className="historia-titulo">{historia.titulo}</h2>}
-            {historia.imagem_url && (
-              <img src={historia.imagem_url} alt={historia.titulo || 'Ilustração da história'} className="historia-imagem" />
+            {historia.imagem_url ? (
+              <div className="historia-imagem-wrap">
+                <img src={historia.imagem_url} alt={historia.titulo || 'Ilustração da história'} className="historia-imagem" />
+                {cor && (
+                  <span className="cor-chip cor-chip--sobreposto">
+                    <span className="cor-chip__ponto" style={{ backgroundColor: cor.hex }} />
+                    Cor: {cor.label}
+                  </span>
+                )}
+              </div>
+            ) : (
+              cor && (
+                <span className="cor-chip">
+                  <span className="cor-chip__ponto" style={{ backgroundColor: cor.hex }} />
+                  Cor: {cor.label}
+                </span>
+              )
             )}
             {historia.audio_url ? (
               <AudioPlayer src={historia.audio_url} />
             ) : (
               <TextToSpeechPlayer texto={historia.texto} />
             )}
-            <div className="historia-aspas">"</div>
             <p className="historia-texto">{historia.texto}</p>
-            <div className="historia-aspas historia-aspas--fim">"</div>
           </div>
         )}
 
