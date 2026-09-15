@@ -901,27 +901,3 @@ body {
   }
 }
 
-/* ===== DESKTOP EXTRA GRANDE ===== */
-@media (min-width: 1200px) {
-  .card {
-    padding: 60px 64px 64px;
-  }
-
-  .grid-idades {
-    max-width: 660px;
-    gap: 20px;
-  }
-
-  .btn-idade {
-    padding: 28px 20px;
-  }
-
-  .color-swatch__circle {
-    width: 84px;
-    height: 84px;
-  }
-
-  .grid-cores {
-    gap: 32px;
-  }
-}
