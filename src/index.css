@@ -712,6 +712,16 @@ body {
   width: 100%;
 }
 
+.voice-tester__lote {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed var(--glass-border);
+  border-radius: 10px;
+}
+
 .voice-tester__mapa {
   display: flex;
   flex-direction: column;

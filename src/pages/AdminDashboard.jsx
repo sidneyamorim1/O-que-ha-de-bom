@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { CORES, FAIXAS_ETARIAS, corInfo, labelFaixaEtaria, getVozPreferida, labelVoz } from '../constants/gameData'
+import { AUDIO_BUCKET, IMAGEM_BUCKET, removeStorageFile, gerarAudioIA } from '../lib/storage'
 import AudioPlayer from '../components/AudioPlayer'
 import VoiceTester from '../components/VoiceTester'
 
@@ -17,22 +18,6 @@ const EMPTY_FORM = {
   imagemUrl: null,
   imagemFile: null,
   removeImagem: false,
-}
-
-const AUDIO_BUCKET = 'audios'
-const IMAGEM_BUCKET = 'imagens'
-
-function extractStoragePath(publicUrl, bucket) {
-  const marker = `/storage/v1/object/public/${bucket}/`
-  const idx = publicUrl?.indexOf(marker)
-  if (idx === -1 || idx === undefined) return null
-  return publicUrl.slice(idx + marker.length)
-}
-
-async function removeStorageFile(publicUrl, bucket) {
-  const path = extractStoragePath(publicUrl, bucket)
-  if (!path) return
-  await supabase.storage.from(bucket).remove([path])
 }
 
 export default function AdminDashboard() {
@@ -62,21 +47,7 @@ export default function AdminDashboard() {
     setGerandoAudioIA(true)
 
     try {
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: form.texto, voice: voz }),
-      })
-      const data = await res.json()
-
-      if (!res.ok || !data.audioContent) {
-        throw new Error(data.error || 'Falha ao gerar áudio')
-      }
-
-      const bytes = atob(data.audioContent)
-      const array = new Uint8Array(bytes.length)
-      for (let i = 0; i < bytes.length; i++) array[i] = bytes.charCodeAt(i)
-      const file = new File([array], `narracao-ia-${voz}.mp3`, { type: 'audio/mpeg' })
+      const file = await gerarAudioIA(form.texto, voz)
 
       limparPreviewIA()
       setIaAudioPreviewUrl(URL.createObjectURL(file))

@@ -9,6 +9,8 @@ import {
   labelVoz,
   labelFaixaEtaria,
 } from '../constants/gameData'
+import { supabase } from '../lib/supabaseClient'
+import { AUDIO_BUCKET, removeStorageFile, gerarAudioIA, uploadAudioFile } from '../lib/storage'
 
 const TEXTO_PADRAO =
   'Eu sou o Cauã. Na aldeia dos meus avós, as vozes dos mais velhos são mais claras que qualquer sinal de Wi-Fi.'
@@ -28,6 +30,8 @@ export default function VoiceTester() {
   const [status, setStatus] = useState('idle') // idle | loading | ok | error
   const [erro, setErro] = useState(null)
   const [, forceUpdate] = useState(0)
+  const [aplicando, setAplicando] = useState(false)
+  const [progresso, setProgresso] = useState(null) // { done, total }
   const audioRef = useRef(null)
   const ultimoBlobUrl = useRef(null)
 
@@ -81,6 +85,78 @@ export default function VoiceTester() {
     limparVozDaFaixa(escopo)
     setVoz(getVozPreferida())
     forceUpdate((n) => n + 1)
+  }
+
+  async function handleAplicarEmMassa() {
+    let faixasAlvo
+    let descricaoEscopo
+
+    if (escopo) {
+      faixasAlvo = [escopo]
+      descricaoEscopo = `da faixa ${labelFaixaEtaria(escopo)}`
+    } else {
+      // Padrão geral: só as faixas que ainda não têm uma voz específica definida —
+      // pra não sobrescrever por engano uma escolha feita pra uma faixa em particular.
+      faixasAlvo = FAIXAS_ETARIAS.map((f) => f.value).filter((v) => !getVozEspecificaDaFaixa(v))
+      descricaoEscopo = 'de todas as faixas que usam o padrão geral (as com voz específica são ignoradas)'
+      if (faixasAlvo.length === 0) {
+        window.alert('Todas as faixas já têm uma voz específica definida — não há nenhuma usando o padrão geral.')
+        return
+      }
+    }
+
+    const { data: historias, error } = await supabase
+      .from('historias')
+      .select('id, texto, audio_url')
+      .in('faixa_etaria', faixasAlvo)
+
+    if (error) {
+      window.alert('Erro ao buscar histórias: ' + error.message)
+      return
+    }
+    if (!historias || historias.length === 0) {
+      window.alert('Nenhuma história cadastrada nesse escopo ainda.')
+      return
+    }
+
+    const confirmado = window.confirm(
+      `Gerar e substituir a narração de ${historias.length} história(s) ${descricaoEscopo} pela voz ${labelVoz(
+        voz
+      )}? O áudio atual de cada uma (se houver) será substituído.`
+    )
+    if (!confirmado) return
+
+    setAplicando(true)
+    setProgresso({ done: 0, total: historias.length })
+    const falhas = []
+
+    for (const historia of historias) {
+      try {
+        const file = await gerarAudioIA(historia.texto, voz)
+        const novaUrl = await uploadAudioFile(file)
+        const { error: updateError } = await supabase
+          .from('historias')
+          .update({ audio_url: novaUrl })
+          .eq('id', historia.id)
+        if (updateError) throw updateError
+        if (historia.audio_url) await removeStorageFile(historia.audio_url, AUDIO_BUCKET)
+      } catch (err) {
+        falhas.push(err.message)
+      }
+      setProgresso((p) => ({ done: p.done + 1, total: p.total }))
+    }
+
+    setAplicando(false)
+    setProgresso(null)
+
+    if (falhas.length === 0) {
+      window.alert(`Pronto! ${historias.length} história(s) atualizadas com a voz ${labelVoz(voz)}.`)
+    } else {
+      window.alert(
+        `${historias.length - falhas.length} de ${historias.length} atualizadas. ${falhas.length} falharam:\n` +
+          falhas.join('\n')
+      )
+    }
   }
 
   return (
@@ -139,6 +215,22 @@ export default function VoiceTester() {
 
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} controls className="audio-player voice-tester__player" />
+
+      <div className="voice-tester__lote">
+        <button type="button" className="btn btn--primary" onClick={handleAplicarEmMassa} disabled={aplicando}>
+          {aplicando
+            ? `Aplicando... (${progresso?.done ?? 0}/${progresso?.total ?? 0})`
+            : escopo
+              ? `🔁 Aplicar essa voz a todas as histórias da faixa ${labelFaixaEtaria(escopo)}`
+              : '🔁 Aplicar essa voz a todas as histórias (todas as faixas sem voz específica)'}
+        </button>
+        <p className="form-hint">
+          {escopo
+            ? 'Regenera e substitui o áudio de todas as histórias dessa faixa com a voz selecionada acima.'
+            : 'Regenera o áudio das histórias de qualquer faixa que ainda não tenha uma voz específica definida.'}{' '}
+          Pode rodar de novo a qualquer momento, sempre que trocar a voz.
+        </p>
+      </div>
 
       <div className="voice-tester__mapa">
         <p className="voice-tester__mapa-item">
