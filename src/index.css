@@ -685,6 +685,26 @@ body {
   flex-wrap: wrap;
 }
 
+/* ===== TESTADOR DE VOZES (ADMIN) ===== */
+.voice-tester {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.voice-tester__acoes {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.voice-tester__player {
+  width: 100%;
+}
+
 .admin-filtros {
   display: flex;
   gap: 14px;

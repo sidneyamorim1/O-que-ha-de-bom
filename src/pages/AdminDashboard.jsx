@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { CORES, FAIXAS_ETARIAS, corInfo, labelFaixaEtaria } from '../constants/gameData'
 import AudioPlayer from '../components/AudioPlayer'
+import VoiceTester from '../components/VoiceTester'
 
 const EMPTY_FORM = {
   id: null,
@@ -185,6 +186,10 @@ export default function AdminDashboard() {
             Sair
           </button>
         </div>
+
+        <VoiceTester />
+
+        <hr className="divisor" />
 
         <form className="form form--grid" onSubmit={handleSubmit}>
           <h2 className="form-titulo">{form.id ? 'Editar história' : 'Nova história'}</h2>

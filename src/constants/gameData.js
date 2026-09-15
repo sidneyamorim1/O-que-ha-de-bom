@@ -23,3 +23,37 @@ export function labelFaixaEtaria(value) {
 export function corInfo(value) {
   return CORES.find((c) => c.value === value)
 }
+
+// Vozes Chirp3-HD (Google Cloud Text-to-Speech) em pt-BR — a camada mais realista disponível.
+export const VOZES_TTS = [
+  { name: 'pt-BR-Chirp3-HD-Achernar', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Achird', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Algenib', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Algieba', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Alnilam', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Aoede', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Autonoe', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Callirrhoe', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Charon', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Despina', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Enceladus', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Erinome', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Fenrir', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Gacrux', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Iapetus', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Kore', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Laomedeia', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Leda', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Orus', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Puck', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Pulcherrima', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Rasalgethi', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Sadachbia', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Sadaltager', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Schedar', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Sulafat', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Umbriel', genero: 'Masculina' },
+  { name: 'pt-BR-Chirp3-HD-Vindemiatrix', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Zephyr', genero: 'Feminina' },
+  { name: 'pt-BR-Chirp3-HD-Zubenelgenubi', genero: 'Masculina' },
+]
