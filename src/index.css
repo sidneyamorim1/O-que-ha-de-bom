@@ -655,6 +655,13 @@ body {
   color: var(--texto-suave);
 }
 
+.gerar-audio-ia {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .audio-player {
   max-width: 100%;
 }
@@ -703,6 +710,26 @@ body {
 
 .voice-tester__player {
   width: 100%;
+}
+
+.voice-tester__mapa {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+}
+
+.voice-tester__mapa-item {
+  margin: 0;
+  font-size: 13px;
+  color: var(--texto-suave);
+}
+
+.voice-tester__mapa-item strong {
+  color: var(--texto);
 }
 
 .admin-filtros {

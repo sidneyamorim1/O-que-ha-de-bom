@@ -41,24 +41,33 @@ function ttsDevMiddleware(env) {
           return
         }
 
-        const googleRes = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            input: { text },
-            voice: { languageCode: 'pt-BR', name: voice },
-            audioConfig: { audioEncoding: 'MP3' },
-          }),
-        })
+        try {
+          const googleRes = await fetch(
+            `https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                input: { text },
+                voice: { languageCode: 'pt-BR', name: voice },
+                audioConfig: { audioEncoding: 'MP3' },
+              }),
+            }
+          )
 
-        const data = await googleRes.json()
-        res.statusCode = googleRes.ok ? 200 : googleRes.status
-        res.setHeader('Content-Type', 'application/json')
-        res.end(
-          googleRes.ok && data.audioContent
-            ? JSON.stringify({ audioContent: data.audioContent })
-            : JSON.stringify({ error: data.error?.message || 'Falha ao gerar áudio' })
-        )
+          const data = await googleRes.json()
+          res.statusCode = googleRes.ok ? 200 : googleRes.status
+          res.setHeader('Content-Type', 'application/json')
+          res.end(
+            googleRes.ok && data.audioContent
+              ? JSON.stringify({ audioContent: data.audioContent })
+              : JSON.stringify({ error: data.error?.message || 'Falha ao gerar áudio' })
+          )
+        } catch (err) {
+          res.statusCode = 502
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Não foi possível falar com o Google Cloud TTS: ' + err.message }))
+        }
       })
     },
   }

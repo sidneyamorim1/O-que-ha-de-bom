@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
-import { CORES, FAIXAS_ETARIAS, corInfo, labelFaixaEtaria } from '../constants/gameData'
+import { CORES, FAIXAS_ETARIAS, corInfo, labelFaixaEtaria, getVozPreferida, labelVoz } from '../constants/gameData'
 import AudioPlayer from '../components/AudioPlayer'
 import VoiceTester from '../components/VoiceTester'
 
@@ -44,6 +44,49 @@ export default function AdminDashboard() {
   const [filtroCor, setFiltroCor] = useState('')
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [gerandoAudioIA, setGerandoAudioIA] = useState(false)
+  const [iaAudioPreviewUrl, setIaAudioPreviewUrl] = useState(null)
+
+  function limparPreviewIA() {
+    if (iaAudioPreviewUrl) URL.revokeObjectURL(iaAudioPreviewUrl)
+    setIaAudioPreviewUrl(null)
+  }
+
+  async function handleGerarAudioIA() {
+    if (!form.texto.trim()) {
+      window.alert('Escreva o texto da história antes de gerar a narração.')
+      return
+    }
+
+    const voz = getVozPreferida(form.faixa_etaria)
+    setGerandoAudioIA(true)
+
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: form.texto, voice: voz }),
+      })
+      const data = await res.json()
+
+      if (!res.ok || !data.audioContent) {
+        throw new Error(data.error || 'Falha ao gerar áudio')
+      }
+
+      const bytes = atob(data.audioContent)
+      const array = new Uint8Array(bytes.length)
+      for (let i = 0; i < bytes.length; i++) array[i] = bytes.charCodeAt(i)
+      const file = new File([array], `narracao-ia-${voz}.mp3`, { type: 'audio/mpeg' })
+
+      limparPreviewIA()
+      setIaAudioPreviewUrl(URL.createObjectURL(file))
+      setForm((f) => ({ ...f, audioFile: file, removeAudio: false }))
+    } catch (err) {
+      window.alert('Erro ao gerar narração: ' + err.message)
+    } finally {
+      setGerandoAudioIA(false)
+    }
+  }
 
   async function carregar() {
     setLoading(true)
@@ -71,6 +114,7 @@ export default function AdminDashboard() {
   }
 
   function handleEditar(historia) {
+    limparPreviewIA()
     setForm({
       id: historia.id,
       faixa_etaria: historia.faixa_etaria,
@@ -88,6 +132,7 @@ export default function AdminDashboard() {
   }
 
   function handleCancelarEdicao() {
+    limparPreviewIA()
     setForm(EMPTY_FORM)
   }
 
@@ -173,6 +218,7 @@ export default function AdminDashboard() {
       await removeStorageFile(form.imagemUrl, IMAGEM_BUCKET)
     }
 
+    limparPreviewIA()
     setForm(EMPTY_FORM)
     carregar()
   }
@@ -242,12 +288,32 @@ export default function AdminDashboard() {
             <input
               type="file"
               accept="audio/mpeg,audio/mp3,.mp3"
-              onChange={(e) =>
+              onChange={(e) => {
+                limparPreviewIA()
                 setForm((f) => ({ ...f, audioFile: e.target.files?.[0] ?? null, removeAudio: false }))
-              }
+              }}
             />
           </label>
-          {form.audioFile && (
+          <div className="form-field--full gerar-audio-ia">
+            <button
+              type="button"
+              className="btn"
+              onClick={handleGerarAudioIA}
+              disabled={gerandoAudioIA || !form.texto.trim()}
+            >
+              {gerandoAudioIA
+                ? 'Gerando narração...'
+                : `🤖 Gerar narração com IA (${labelVoz(getVozPreferida(form.faixa_etaria))})`}
+            </button>
+            <span className="form-hint">Pra trocar a voz, use o testador lá em cima.</span>
+          </div>
+          {iaAudioPreviewUrl && (
+            <div className="form-field--full audio-atual">
+              <span>Narração gerada por IA:</span>
+              <AudioPlayer src={iaAudioPreviewUrl} />
+            </div>
+          )}
+          {form.audioFile && !iaAudioPreviewUrl && (
             <p className="form-hint form-field--full">Novo arquivo selecionado: {form.audioFile.name}</p>
           )}
           {!form.audioFile && form.audioUrl && !form.removeAudio && (

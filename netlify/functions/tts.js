@@ -22,28 +22,35 @@ export async function handler(event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Texto muito longo (limite de 4500 caracteres por chamada)' }) }
   }
 
-  const googleRes = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      input: { text },
-      voice: { languageCode: 'pt-BR', name: voice },
-      audioConfig: { audioEncoding: 'MP3' },
-    }),
-  })
+  try {
+    const googleRes = await fetch(`https://texttospeech.googleapis.com/v1/text:synthesize?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: { text },
+        voice: { languageCode: 'pt-BR', name: voice },
+        audioConfig: { audioEncoding: 'MP3' },
+      }),
+    })
 
-  const data = await googleRes.json()
+    const data = await googleRes.json()
 
-  if (!googleRes.ok || !data.audioContent) {
-    return {
-      statusCode: googleRes.status || 500,
-      body: JSON.stringify({ error: data.error?.message || 'Falha ao gerar áudio' }),
+    if (!googleRes.ok || !data.audioContent) {
+      return {
+        statusCode: googleRes.status || 500,
+        body: JSON.stringify({ error: data.error?.message || 'Falha ao gerar áudio' }),
+      }
     }
-  }
 
-  return {
-    statusCode: 200,
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ audioContent: data.audioContent }),
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ audioContent: data.audioContent }),
+    }
+  } catch (err) {
+    return {
+      statusCode: 502,
+      body: JSON.stringify({ error: 'Não foi possível falar com o Google Cloud TTS: ' + err.message }),
+    }
   }
 }

@@ -1,5 +1,14 @@
 import { useRef, useState } from 'react'
-import { VOZES_TTS } from '../constants/gameData'
+import {
+  VOZES_TTS,
+  FAIXAS_ETARIAS,
+  getVozPreferida,
+  getVozEspecificaDaFaixa,
+  setVozPreferida,
+  limparVozDaFaixa,
+  labelVoz,
+  labelFaixaEtaria,
+} from '../constants/gameData'
 
 const TEXTO_PADRAO =
   'Eu sou o Cauã. Na aldeia dos meus avós, as vozes dos mais velhos são mais claras que qualquer sinal de Wi-Fi.'
@@ -13,10 +22,12 @@ function base64ParaBlobUrl(base64) {
 }
 
 export default function VoiceTester() {
-  const [voz, setVoz] = useState(VOZES_TTS[0].name)
+  const [escopo, setEscopo] = useState('') // '' = padrão geral, senão um value de FAIXAS_ETARIAS
+  const [voz, setVoz] = useState(() => getVozPreferida())
   const [texto, setTexto] = useState(TEXTO_PADRAO)
   const [status, setStatus] = useState('idle') // idle | loading | ok | error
   const [erro, setErro] = useState(null)
+  const [, forceUpdate] = useState(0)
   const audioRef = useRef(null)
   const ultimoBlobUrl = useRef(null)
 
@@ -52,19 +63,46 @@ export default function VoiceTester() {
     }
   }
 
+  function handleEscopoChange(e) {
+    const novoEscopo = e.target.value
+    setEscopo(novoEscopo)
+    setVoz(getVozPreferida(novoEscopo || undefined))
+  }
+
   function handleVozChange(e) {
     const novaVoz = e.target.value
     setVoz(novaVoz)
+    setVozPreferida(novaVoz, escopo || undefined)
+    forceUpdate((n) => n + 1)
     testar(novaVoz)
+  }
+
+  function handleLimparFaixa() {
+    limparVozDaFaixa(escopo)
+    setVoz(getVozPreferida())
+    forceUpdate((n) => n + 1)
   }
 
   return (
     <div className="voice-tester">
       <h2 className="form-titulo">Testar vozes (Google Cloud TTS)</h2>
       <p className="form-hint">
-        Escolha uma voz pra ouvir — troca automaticamente ao selecionar. Isso é só um teste, não afeta as
-        histórias cadastradas.
+        Defina uma voz padrão geral, ou uma voz específica por faixa etária (que sobrescreve o padrão só
+        naquela faixa). Ao gerar narração pra uma história, o app usa a voz da faixa dela, ou o padrão geral
+        se não houver uma específica.
       </p>
+
+      <label className="form-field form-field--full">
+        Aplicar a voz escolhida para
+        <select value={escopo} onChange={handleEscopoChange}>
+          <option value="">Padrão geral (todas as faixas sem voz específica)</option>
+          {FAIXAS_ETARIAS.map((f) => (
+            <option key={f.value} value={f.value}>
+              Só a faixa {f.label} anos
+            </option>
+          ))}
+        </select>
+      </label>
 
       <label className="form-field form-field--full">
         Texto de teste
@@ -91,11 +129,31 @@ export default function VoiceTester() {
         >
           {status === 'loading' ? 'Gerando...' : '▶ Testar de novo'}
         </button>
+        {escopo && getVozEspecificaDaFaixa(escopo) && (
+          <button type="button" className="btn btn--perigo" onClick={handleLimparFaixa}>
+            Remover voz específica dessa faixa
+          </button>
+        )}
         {status === 'error' && <span className="mensagem mensagem--erro">{erro}</span>}
       </div>
 
       {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
       <audio ref={audioRef} controls className="audio-player voice-tester__player" />
+
+      <div className="voice-tester__mapa">
+        <p className="voice-tester__mapa-item">
+          <strong>Padrão geral:</strong> {labelVoz(getVozPreferida())}
+        </p>
+        {FAIXAS_ETARIAS.map((f) => {
+          const especifica = getVozEspecificaDaFaixa(f.value)
+          return (
+            <p key={f.value} className="voice-tester__mapa-item">
+              <strong>{labelFaixaEtaria(f.value)} anos:</strong>{' '}
+              {especifica ? labelVoz(especifica) : 'usa o padrão geral'}
+            </p>
+          )
+        })}
+      </div>
     </div>
   )
 }
