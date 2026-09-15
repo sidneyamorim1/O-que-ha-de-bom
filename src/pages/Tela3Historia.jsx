@@ -23,7 +23,7 @@ export default function Tela3Historia() {
 
     supabase
       .from('historias')
-      .select('id, titulo, texto, audio_url')
+      .select('id, titulo, texto, audio_url, imagem_url')
       .eq('faixa_etaria', selectedAge)
       .eq('cor', selectedColor)
       .then(({ data, error }) => {
@@ -56,15 +56,24 @@ export default function Tela3Historia() {
   return (
     <div className="page">
       <div className="card">
-        <h1 className="titulo">
-          O que há de
-          <br />
-          BOM?
-        </h1>
+        <div className="titulo-wrapper">
+          <span className="titulo-emoji">📖</span>
+          <h1 className="titulo">
+            O que há de
+            <br />
+            BOM?
+          </h1>
+        </div>
         <p className="subtitulo">Cor escolhida</p>
-        {cor && <div className="color-swatch color-swatch--display" style={{ backgroundColor: cor.hex }} />}
 
-        {status === 'loading' && <p className="mensagem">Sorteando uma história...</p>}
+        {cor && (
+          <div className="color-swatch color-swatch--display">
+            <span className="color-swatch__circle" style={{ backgroundColor: cor.hex }} />
+            <span className="color-swatch__label">{cor.label}</span>
+          </div>
+        )}
+
+        {status === 'loading' && <p className="mensagem">✨ Sorteando uma história...</p>}
 
         {status === 'error' && (
           <p className="mensagem mensagem--erro">
@@ -79,19 +88,24 @@ export default function Tela3Historia() {
         )}
 
         {status === 'ok' && historia && (
-          <>
+          <div className="historia-reveal">
             {historia.titulo && <h2 className="historia-titulo">{historia.titulo}</h2>}
+            {historia.imagem_url && (
+              <img src={historia.imagem_url} alt={historia.titulo || 'Ilustração da história'} className="historia-imagem" />
+            )}
             {historia.audio_url ? (
               <AudioPlayer src={historia.audio_url} />
             ) : (
               <TextToSpeechPlayer texto={historia.texto} />
             )}
+            <div className="historia-aspas">"</div>
             <p className="historia-texto">{historia.texto}</p>
-          </>
+            <div className="historia-aspas historia-aspas--fim">"</div>
+          </div>
         )}
 
         <button type="button" className="btn btn--primary btn--full" onClick={handleJogarNovamente}>
-          Jogar novamente
+          🎲 Jogar novamente
         </button>
       </div>
     </div>

@@ -13,21 +13,25 @@ const EMPTY_FORM = {
   audioUrl: null,
   audioFile: null,
   removeAudio: false,
+  imagemUrl: null,
+  imagemFile: null,
+  removeImagem: false,
 }
 
 const AUDIO_BUCKET = 'audios'
+const IMAGEM_BUCKET = 'imagens'
 
-function extractStoragePath(publicUrl) {
-  const marker = `/storage/v1/object/public/${AUDIO_BUCKET}/`
+function extractStoragePath(publicUrl, bucket) {
+  const marker = `/storage/v1/object/public/${bucket}/`
   const idx = publicUrl?.indexOf(marker)
   if (idx === -1 || idx === undefined) return null
   return publicUrl.slice(idx + marker.length)
 }
 
-async function removeAudioFile(publicUrl) {
-  const path = extractStoragePath(publicUrl)
+async function removeStorageFile(publicUrl, bucket) {
+  const path = extractStoragePath(publicUrl, bucket)
   if (!path) return
-  await supabase.storage.from(AUDIO_BUCKET).remove([path])
+  await supabase.storage.from(bucket).remove([path])
 }
 
 export default function AdminDashboard() {
@@ -75,6 +79,9 @@ export default function AdminDashboard() {
       audioUrl: historia.audio_url ?? null,
       audioFile: null,
       removeAudio: false,
+      imagemUrl: historia.imagem_url ?? null,
+      imagemFile: null,
+      removeImagem: false,
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -83,14 +90,15 @@ export default function AdminDashboard() {
     setForm(EMPTY_FORM)
   }
 
-  async function handleExcluir(id, audioUrl) {
+  async function handleExcluir(id, audioUrl, imagemUrl) {
     if (!window.confirm('Excluir esta história? Essa ação não pode ser desfeita.')) return
     const { error } = await supabase.from('historias').delete().eq('id', id)
     if (error) {
       window.alert('Erro ao excluir: ' + error.message)
       return
     }
-    if (audioUrl) await removeAudioFile(audioUrl)
+    if (audioUrl) await removeStorageFile(audioUrl, AUDIO_BUCKET)
+    if (imagemUrl) await removeStorageFile(imagemUrl, IMAGEM_BUCKET)
     carregar()
   }
 
@@ -116,12 +124,31 @@ export default function AdminDashboard() {
       audioUrl = publicUrlData.publicUrl
     }
 
+    let imagemUrl = form.removeImagem ? null : form.imagemUrl
+
+    if (form.imagemFile) {
+      const path = `${crypto.randomUUID()}-${form.imagemFile.name}`
+      const { error: uploadError } = await supabase.storage
+        .from(IMAGEM_BUCKET)
+        .upload(path, form.imagemFile, { contentType: form.imagemFile.type || 'image/jpeg' })
+
+      if (uploadError) {
+        setSaving(false)
+        window.alert('Erro ao enviar a imagem: ' + uploadError.message)
+        return
+      }
+
+      const { data: publicUrlData } = supabase.storage.from(IMAGEM_BUCKET).getPublicUrl(path)
+      imagemUrl = publicUrlData.publicUrl
+    }
+
     const payload = {
       faixa_etaria: form.faixa_etaria,
       cor: form.cor,
       titulo: form.titulo.trim() || null,
       texto: form.texto.trim(),
       audio_url: audioUrl,
+      imagem_url: imagemUrl,
     }
 
     const { error } = form.id
@@ -135,10 +162,14 @@ export default function AdminDashboard() {
       return
     }
 
-    // Se trocou ou removeu o áudio antigo, limpa o arquivo anterior do storage
+    // Se trocou ou removeu o áudio/imagem antigos, limpa o arquivo anterior do storage
     const trocouAudio = form.audioFile || form.removeAudio
     if (trocouAudio && form.audioUrl && form.audioUrl !== audioUrl) {
-      await removeAudioFile(form.audioUrl)
+      await removeStorageFile(form.audioUrl, AUDIO_BUCKET)
+    }
+    const trocouImagem = form.imagemFile || form.removeImagem
+    if (trocouImagem && form.imagemUrl && form.imagemUrl !== imagemUrl) {
+      await removeStorageFile(form.imagemUrl, IMAGEM_BUCKET)
     }
 
     setForm(EMPTY_FORM)
@@ -230,6 +261,34 @@ export default function AdminDashboard() {
           {form.removeAudio && (
             <p className="form-hint form-field--full">O áudio será removido ao salvar.</p>
           )}
+          <label className="form-field form-field--full">
+            Imagem (opcional)
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                setForm((f) => ({ ...f, imagemFile: e.target.files?.[0] ?? null, removeImagem: false }))
+              }
+            />
+          </label>
+          {form.imagemFile && (
+            <p className="form-hint form-field--full">Novo arquivo selecionado: {form.imagemFile.name}</p>
+          )}
+          {!form.imagemFile && form.imagemUrl && !form.removeImagem && (
+            <div className="form-field--full imagem-atual">
+              <img src={form.imagemUrl} alt="Imagem atual da história" className="imagem-preview" />
+              <button
+                type="button"
+                className="btn btn--perigo"
+                onClick={() => setForm((f) => ({ ...f, removeImagem: true }))}
+              >
+                Remover imagem
+              </button>
+            </div>
+          )}
+          {form.removeImagem && (
+            <p className="form-hint form-field--full">A imagem será removida ao salvar.</p>
+          )}
           <div className="form-field--full form-actions">
             <button type="submit" className="btn btn--primary" disabled={saving}>
               {saving ? 'Salvando...' : form.id ? 'Salvar alterações' : 'Adicionar história'}
@@ -291,12 +350,19 @@ export default function AdminDashboard() {
                   {h.audio_url && (
                     <p className="lista-historias__meta lista-historias__meta--audio">🎵 tem áudio gravado</p>
                   )}
+                  {h.imagem_url && (
+                    <p className="lista-historias__meta lista-historias__meta--audio">🖼️ tem imagem</p>
+                  )}
                 </div>
                 <div className="lista-historias__acoes">
                   <button type="button" className="btn" onClick={() => handleEditar(h)}>
                     Editar
                   </button>
-                  <button type="button" className="btn btn--perigo" onClick={() => handleExcluir(h.id, h.audio_url)}>
+                  <button
+                    type="button"
+                    className="btn btn--perigo"
+                    onClick={() => handleExcluir(h.id, h.audio_url, h.imagem_url)}
+                  >
                     Excluir
                   </button>
                 </div>

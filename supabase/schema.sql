@@ -10,11 +10,13 @@ create table if not exists public.historias (
   titulo text,
   texto text not null,
   audio_url text,
+  imagem_url text,
   created_at timestamptz not null default now()
 );
 
--- Se a tabela já existia (de uma versão anterior deste schema), garante a coluna nova:
+-- Se a tabela já existia (de uma versão anterior deste schema), garante as colunas novas:
 alter table public.historias add column if not exists audio_url text;
+alter table public.historias add column if not exists imagem_url text;
 
 create index if not exists historias_faixa_cor_idx on public.historias (faixa_etaria, cor);
 
@@ -84,6 +86,40 @@ create policy "audios_delete_authenticated"
   for delete
   to authenticated
   using (bucket_id = 'audios');
+
+-- Bucket de Storage para as imagens opcionais (upload feito pelo admin)
+insert into storage.buckets (id, name, public)
+values ('imagens', 'imagens', true)
+on conflict (id) do nothing;
+
+drop policy if exists "imagens_select_public" on storage.objects;
+create policy "imagens_select_public"
+  on storage.objects
+  for select
+  to anon, authenticated
+  using (bucket_id = 'imagens');
+
+drop policy if exists "imagens_insert_authenticated" on storage.objects;
+create policy "imagens_insert_authenticated"
+  on storage.objects
+  for insert
+  to authenticated
+  with check (bucket_id = 'imagens');
+
+drop policy if exists "imagens_update_authenticated" on storage.objects;
+create policy "imagens_update_authenticated"
+  on storage.objects
+  for update
+  to authenticated
+  using (bucket_id = 'imagens')
+  with check (bucket_id = 'imagens');
+
+drop policy if exists "imagens_delete_authenticated" on storage.objects;
+create policy "imagens_delete_authenticated"
+  on storage.objects
+  for delete
+  to authenticated
+  using (bucket_id = 'imagens');
 
 -- Depois de rodar este script, crie o usuário admin em:
 -- Authentication > Users > Add user (email + senha)

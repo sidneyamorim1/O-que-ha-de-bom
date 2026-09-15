@@ -27,12 +27,15 @@ export default function Tela2Cor() {
   return (
     <div className="page">
       <div className="card">
-        <h1 className="titulo">
-          O que há de
-          <br />
-          BOM?
-        </h1>
-        <p className="subtitulo">Selecione a cor da roleta</p>
+        <div className="titulo-wrapper">
+          <span className="titulo-emoji">🎡</span>
+          <h1 className="titulo">
+            O que há de
+            <br />
+            BOM?
+          </h1>
+        </div>
+        <p className="subtitulo">Qual cor saiu na roleta?</p>
         <div className="grid-cores">
           {CORES.map((cor) => (
             <ColorSwatchButton

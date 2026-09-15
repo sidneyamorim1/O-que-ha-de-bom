@@ -15,12 +15,15 @@ export default function Tela1Idade() {
   return (
     <div className="page">
       <div className="card">
-        <h1 className="titulo">
-          O que há de
-          <br />
-          BOM?
-        </h1>
-        <p className="subtitulo">Selecione sua idade</p>
+        <div className="titulo-wrapper">
+          <span className="titulo-emoji">🎲</span>
+          <h1 className="titulo">
+            O que há de
+            <br />
+            BOM?
+          </h1>
+        </div>
+        <p className="subtitulo">Selecione sua faixa etária</p>
         <div className="grid-idades">
           {FAIXAS_ETARIAS.map((faixa) => (
             <button
@@ -29,7 +32,9 @@ export default function Tela1Idade() {
               className="btn-idade"
               onClick={() => handleSelect(faixa.value)}
             >
-              {faixa.label}
+              <span className="btn-idade__emoji">{faixa.emoji}</span>
+              <span className="btn-idade__label">{faixa.label} anos</span>
+              <span className="btn-idade__hint">{faixa.hint}</span>
             </button>
           ))}
         </div>

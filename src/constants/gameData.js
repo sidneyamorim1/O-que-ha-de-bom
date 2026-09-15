@@ -1,10 +1,10 @@
 export const FAIXAS_ETARIAS = [
-  { value: '10-16', label: '10 a 16' },
-  { value: '17-20', label: '17 a 20' },
-  { value: '21-30', label: '21 a 30' },
-  { value: '31-40', label: '31 a 40' },
-  { value: '41-50', label: '41 a 50' },
-  { value: '51-60', label: '51 a 60' },
+  { value: '10-16', label: '10 a 16', emoji: '🧒', hint: 'Jovens exploradores' },
+  { value: '17-20', label: '17 a 20', emoji: '🎓', hint: 'Novos caminhos' },
+  { value: '21-30', label: '21 a 30', emoji: '🚀', hint: 'Conquistando o mundo' },
+  { value: '31-40', label: '31 a 40', emoji: '💪', hint: 'Força e experiência' },
+  { value: '41-50', label: '41 a 50', emoji: '🌟', hint: 'Brilho da maturidade' },
+  { value: '51-60', label: '51 a 60', emoji: '🏆', hint: 'Sabedoria e vitórias' },
 ]
 
 export const CORES = [

@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppProvider } from './context/AppContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import Particles from './components/Particles'
 import Tela1Idade from './pages/Tela1Idade'
 import Tela2Cor from './pages/Tela2Cor'
 import Tela3Historia from './pages/Tela3Historia'
@@ -11,6 +12,7 @@ function App() {
   return (
     <AppProvider>
       <BrowserRouter>
+        <Particles />
         <Routes>
           <Route path="/" element={<Tela1Idade />} />
           <Route path="/roleta" element={<Tela2Cor />} />
@@ -26,6 +28,7 @@ function App() {
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <footer className="app-footer">🎲 Jogo de tabuleiro • O que há de BOM?</footer>
       </BrowserRouter>
     </AppProvider>
   )
