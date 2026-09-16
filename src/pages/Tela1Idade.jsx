@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { FAIXAS_ETARIAS } from '../constants/gameData'
 import { useApp } from '../context/AppContext'
+import logo from '../assets/logo/logo.png'
 
 export default function Tela1Idade() {
   const navigate = useNavigate()
@@ -16,7 +17,7 @@ export default function Tela1Idade() {
     <div className="page">
       <div className="card">
         <div className="titulo-wrapper">
-          <span className="titulo-emoji">🎲</span>
+          <img src={logo} alt="O que há de Bom?" className="titulo-logo" />
           <h1 className="titulo">
             O que há de
             <br />

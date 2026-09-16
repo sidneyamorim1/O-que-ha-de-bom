@@ -252,6 +252,16 @@ body {
   -webkit-text-fill-color: initial;
 }
 
+.titulo-logo {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  border-radius: 24px;
+  display: block;
+  margin: 0 auto 8px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
 /* Versão compacta: usada em telas onde o conteúdo abaixo (a história) importa mais que o cabeçalho */
 .titulo-wrapper--compacto {
   margin-bottom: 10px;
