@@ -153,6 +153,10 @@ body {
   max-width: 520px;
 }
 
+.card--admin.card--wide {
+  max-width: 1200px;
+}
+
 .card--compacto {
   max-width: 640px;
   padding: 32px 36px 40px;
