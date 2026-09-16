@@ -5,6 +5,7 @@ import { CORES, FAIXAS_ETARIAS, corInfo, labelFaixaEtaria, getVozPreferida, labe
 import { AUDIO_BUCKET, IMAGEM_BUCKET, removeStorageFile, gerarAudioIA } from '../lib/storage'
 import AudioPlayer from '../components/AudioPlayer'
 import VoiceTester from '../components/VoiceTester'
+import { limparCacheHistorias } from '../lib/historias'
 
 const EMPTY_FORM = {
   id: null,
@@ -115,6 +116,7 @@ export default function AdminDashboard() {
       window.alert('Erro ao excluir: ' + error.message)
       return
     }
+    limparCacheHistorias()
     if (audioUrl) await removeStorageFile(audioUrl, AUDIO_BUCKET)
     if (imagemUrl) await removeStorageFile(imagemUrl, IMAGEM_BUCKET)
     setExcluindo(null)
@@ -180,6 +182,8 @@ export default function AdminDashboard() {
       window.alert('Erro ao salvar: ' + error.message)
       return
     }
+
+    limparCacheHistorias()
 
     // Se trocou ou removeu o áudio/imagem antigos, limpa o arquivo anterior do storage
     const trocouAudio = form.audioFile || form.removeAudio

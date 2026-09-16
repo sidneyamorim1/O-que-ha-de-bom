@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
+import { carregarHistorias, consultarHistorias } from '../lib/historias'
 import { corInfo, labelFaixaEtaria } from '../constants/gameData'
 import { useApp } from '../context/AppContext'
 import TextToSpeechPlayer from '../components/TextToSpeechPlayer'
@@ -9,43 +9,48 @@ import AudioPlayer from '../components/AudioPlayer'
 export default function Tela3Historia() {
   const navigate = useNavigate()
   const { selectedAge, selectedColor } = useApp()
-  const [status, setStatus] = useState('loading') // loading | ok | empty | error
-  const [historia, setHistoria] = useState(null)
 
   useEffect(() => {
     if (!selectedAge || !selectedColor) {
       navigate('/', { replace: true })
-      return
     }
+  }, [selectedAge, selectedColor, navigate])
+
+  if (!selectedAge || !selectedColor) return null
+
+  return <Historia key={`${selectedAge}:${selectedColor}`} selectedAge={selectedAge} selectedColor={selectedColor} />
+}
+
+function sortear(historias) {
+  if (!historias.length) return { status: 'empty', historia: null }
+  return { status: 'ok', historia: historias[Math.floor(Math.random() * historias.length)] }
+}
+
+function Historia({ selectedAge, selectedColor }) {
+  const navigate = useNavigate()
+  const [{ status, historia }, setResultado] = useState(() => {
+    const historias = consultarHistorias(selectedAge, selectedColor)
+    return historias ? sortear(historias) : { status: 'loading', historia: null }
+  })
+
+  useEffect(() => {
+    if (status !== 'loading') return
 
     let active = true
-    setStatus('loading')
-
-    supabase
-      .from('historias')
-      .select('id, titulo, texto, audio_url, imagem_url')
-      .eq('faixa_etaria', selectedAge)
-      .eq('cor', selectedColor)
-      .then(({ data, error }) => {
+    carregarHistorias(selectedAge, selectedColor)
+      .then((historias) => {
+        if (active) setResultado(sortear(historias))
+      })
+      .catch((error) => {
         if (!active) return
-        if (error) {
-          console.error(error)
-          setStatus('error')
-          return
-        }
-        if (!data || data.length === 0) {
-          setStatus('empty')
-          return
-        }
-        const sorteada = data[Math.floor(Math.random() * data.length)]
-        setHistoria(sorteada)
-        setStatus('ok')
+        console.error(error)
+        setResultado({ status: 'error', historia: null })
       })
 
     return () => {
       active = false
     }
-  }, [selectedAge, selectedColor, navigate])
+  }, [selectedAge, selectedColor, status])
 
   function handleJogarNovamente() {
     navigate('/roleta')
@@ -54,7 +59,7 @@ export default function Tela3Historia() {
   const cor = corInfo(selectedColor)
 
   return (
-    <div className="page">
+    <div className="page page--historia">
       <div className="card card--compacto">
         {status === 'loading' && <p className="mensagem">✨ Sorteando uma história...</p>}
 

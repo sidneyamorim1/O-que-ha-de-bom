@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { FAIXAS_ETARIAS } from '../constants/gameData'
 import { useApp } from '../context/AppContext'
-import logo from '../assets/logo/logo.png'
+import logo from '../assets/logo/logo.webp'
 
 export default function Tela1Idade() {
   const navigate = useNavigate()

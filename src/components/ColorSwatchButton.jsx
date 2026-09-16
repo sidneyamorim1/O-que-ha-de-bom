@@ -1,9 +1,9 @@
-import azul from '../../Imagens/icones-roleta/Azul 1.svg'
-import amarelo from '../../Imagens/icones-roleta/amarelo.svg'
-import vermelho from '../../Imagens/icones-roleta/vermelho.svg'
-import roxo from '../../Imagens/icones-roleta/roxo.svg'
-import verde from '../../Imagens/icones-roleta/verde.svg'
-import laranja from '../../Imagens/icones-roleta/Laranja.svg'
+import azul from '../assets/icones-roleta/azul.webp'
+import amarelo from '../assets/icones-roleta/amarelo.webp'
+import vermelho from '../assets/icones-roleta/vermelho.webp'
+import roxo from '../assets/icones-roleta/roxo.webp'
+import verde from '../assets/icones-roleta/verde.webp'
+import laranja from '../assets/icones-roleta/laranja.webp'
 
 const icones = { azul, amarelo, vermelho, roxo, verde, laranja }
 

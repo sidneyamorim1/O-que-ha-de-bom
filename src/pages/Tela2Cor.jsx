@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { CORES } from '../constants/gameData'
 import { useApp } from '../context/AppContext'
 import ColorSwatchButton from '../components/ColorSwatchButton'
-import logo from '../assets/logo/logo.png'
+import { anteciparHistorias } from '../lib/historias'
+import logo from '../assets/logo/logo.webp'
 
 export default function Tela2Cor() {
   const navigate = useNavigate()
@@ -11,6 +12,7 @@ export default function Tela2Cor() {
 
   useEffect(() => {
     if (!selectedAge) navigate('/', { replace: true })
+    else anteciparHistorias(selectedAge)
   }, [selectedAge, navigate])
 
   useEffect(() => {
