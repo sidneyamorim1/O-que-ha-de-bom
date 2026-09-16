@@ -4,6 +4,9 @@ App complementar de um jogo de tabuleiro físico. O jogador escolhe a idade, inf
 
 **Em produção:** https://oquehadebom.netlify.app/
 
+<details>
+<summary>Detalhes técnicos (stack, setup, deploy)</summary>
+
 ## Stack
 
 - React + Vite
@@ -50,3 +53,5 @@ A voz de narração por IA é configurável no topo do `/admin` (padrão geral, 
 2. `/roleta` — seleção da cor sorteada na roleta física. A idade fica fixa aqui; só muda se o jogador clicar em "← Trocar idade".
 3. `/historia` — sorteio de uma história cadastrada para aquela idade + cor. Botão "Jogar novamente" volta pra `/roleta` mantendo a idade.
 4. `/admin` (protegido por login) — CRUD de histórias, com upload opcional de MP3 e imagem, e um testador de vozes de IA (Google Cloud TTS).
+
+</details>
