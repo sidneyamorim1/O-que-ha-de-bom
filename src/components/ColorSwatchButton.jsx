@@ -1,3 +1,12 @@
+import azul from '../../Imagens/icones-roleta/Azul 1.svg'
+import amarelo from '../../Imagens/icones-roleta/amarelo.svg'
+import vermelho from '../../Imagens/icones-roleta/vermelho.svg'
+import roxo from '../../Imagens/icones-roleta/roxo.svg'
+import verde from '../../Imagens/icones-roleta/verde.svg'
+import laranja from '../../Imagens/icones-roleta/Laranja.svg'
+
+const icones = { azul, amarelo, vermelho, roxo, verde, laranja }
+
 export default function ColorSwatchButton({ cor, selected, onClick }) {
   return (
     <button
@@ -8,7 +17,13 @@ export default function ColorSwatchButton({ cor, selected, onClick }) {
       title={cor.label}
       style={{ '--swatch-glow': `${cor.hex}66` }}
     >
-      <span className="color-swatch__circle" style={{ backgroundColor: cor.hex }} />
+      <img
+        className="color-swatch__icon"
+        src={icones[cor.value]}
+        alt=""
+        width="135"
+        height="90"
+      />
       <span className="color-swatch__label">{cor.label}</span>
     </button>
   )

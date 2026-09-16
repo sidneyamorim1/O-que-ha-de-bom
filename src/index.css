@@ -356,22 +356,23 @@ body {
 
 /* ===== GRID DE CORES ===== */
 .grid-cores {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  justify-content: center;
-  margin-bottom: 32px;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  max-width: 660px;
+  margin: 0 auto 32px;
 }
 
 .color-swatch {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   align-items: center;
   gap: 10px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px;
+  padding: 8px 2px;
   border-radius: 16px;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -384,23 +385,23 @@ body {
   transform: scale(1.02);
 }
 
-.color-swatch__circle {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  border: 3px solid rgba(255, 255, 255, 0.15);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+.color-swatch__icon {
+  display: block;
+  width: 90px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  transition: filter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
 }
 
-.color-swatch:hover .color-swatch__circle {
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3), 0 0 20px var(--swatch-glow, rgba(255,255,255,0.15));
+.color-swatch:hover .color-swatch__icon,
+.color-swatch:focus-visible .color-swatch__icon {
+  filter: drop-shadow(0 4px 12px var(--swatch-glow, rgba(255,255,255,0.15)));
 }
 
-.color-swatch--selected .color-swatch__circle {
-  border-color: #fff;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3), 0 4px 20px rgba(0, 0, 0, 0.3);
+.color-swatch--selected .color-swatch__icon {
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
 }
 
 .color-swatch__label {
@@ -408,6 +409,16 @@ body {
   font-weight: 600;
   color: var(--texto-suave);
   transition: color 0.2s;
+}
+
+.grid-cores .color-swatch__label {
+  width: 90px;
+  max-width: 100%;
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+  /* Centraliza o nome no corpo da peça, compensando o encaixe à direita. */
+  transform: translateX(-6%);
 }
 
 .color-swatch:hover .color-swatch__label {
@@ -946,13 +957,17 @@ body {
     font-size: 16px;
   }
 
-  .color-swatch__circle {
-    width: 60px;
-    height: 60px;
+  .color-swatch {
+    padding: 8px 0;
+    gap: 6px;
+  }
+
+  .color-swatch__label {
+    font-size: clamp(8px, 2vw, 12px);
   }
 
   .grid-cores {
-    gap: 16px;
+    gap: 4px;
   }
 
   .historia-texto {
@@ -979,4 +994,3 @@ body {
     font-size: 32px;
   }
 }
-
