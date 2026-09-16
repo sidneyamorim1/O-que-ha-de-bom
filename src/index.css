@@ -162,6 +162,52 @@ body {
   padding: 32px 36px 40px;
 }
 
+/* ===== MODAL DE CONFIRMAÇÃO ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 12, 41, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 100;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card-bg);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: var(--glass-shadow);
+  text-align: left;
+}
+
+.modal-titulo {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--texto);
+}
+
+.modal-texto {
+  margin: 0 0 24px;
+  color: var(--texto-suave);
+  line-height: 1.5;
+}
+
+.modal-acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 /* ===== TÍTULO PRINCIPAL ===== */
 .titulo {
   color: #fff;
@@ -574,6 +620,17 @@ body {
   background: rgba(255, 107, 107, 0.1);
 }
 
+.btn--perigo-solido {
+  background: var(--perigo);
+  border-color: transparent;
+  color: #fff;
+}
+
+.btn--perigo-solido:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 20px rgba(255, 107, 107, 0.35);
+}
+
 .btn--full {
   width: 100%;
 }
@@ -784,6 +841,13 @@ body {
 .lista-historias__item:hover {
   background: var(--glass-bg-hover);
   border-color: var(--glass-border-hover);
+}
+
+.lista-historias__item--editando {
+  display: block;
+  padding: 20px;
+  border-color: var(--acento-secundario);
+  background: var(--glass-bg-hover);
 }
 
 .lista-historias__cor {

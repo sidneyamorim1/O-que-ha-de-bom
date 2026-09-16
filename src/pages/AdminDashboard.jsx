@@ -31,6 +31,7 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false)
   const [gerandoAudioIA, setGerandoAudioIA] = useState(false)
   const [iaAudioPreviewUrl, setIaAudioPreviewUrl] = useState(null)
+  const [excluindo, setExcluindo] = useState(null)
 
   function limparPreviewIA() {
     if (iaAudioPreviewUrl) URL.revokeObjectURL(iaAudioPreviewUrl)
@@ -99,7 +100,6 @@ export default function AdminDashboard() {
       imagemFile: null,
       removeImagem: false,
     })
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function handleCancelarEdicao() {
@@ -107,8 +107,9 @@ export default function AdminDashboard() {
     setForm(EMPTY_FORM)
   }
 
-  async function handleExcluir(id, audioUrl, imagemUrl) {
-    if (!window.confirm('Excluir esta história? Essa ação não pode ser desfeita.')) return
+  async function confirmarExclusao() {
+    if (!excluindo) return
+    const { id, audio_url: audioUrl, imagem_url: imagemUrl } = excluindo
     const { error } = await supabase.from('historias').delete().eq('id', id)
     if (error) {
       window.alert('Erro ao excluir: ' + error.message)
@@ -116,6 +117,7 @@ export default function AdminDashboard() {
     }
     if (audioUrl) await removeStorageFile(audioUrl, AUDIO_BUCKET)
     if (imagemUrl) await removeStorageFile(imagemUrl, IMAGEM_BUCKET)
+    setExcluindo(null)
     carregar()
   }
 
@@ -194,21 +196,8 @@ export default function AdminDashboard() {
     carregar()
   }
 
-  return (
-    <div className="page page--admin">
-      <div className="card card--admin card--wide">
-        <div className="admin-header">
-          <h1 className="titulo titulo--sm">Admin — O que há de BOM?</h1>
-          <button type="button" className="btn" onClick={handleLogout}>
-            Sair
-          </button>
-        </div>
-
-        <VoiceTester />
-
-        <hr className="divisor" />
-
-        <form className="form form--grid" onSubmit={handleSubmit}>
+  const formulario = (
+    <form className="form form--grid" onSubmit={handleSubmit}>
           <h2 className="form-titulo">{form.id ? 'Editar história' : 'Nova história'}</h2>
           <label className="form-field">
             Faixa etária
@@ -342,6 +331,23 @@ export default function AdminDashboard() {
             )}
           </div>
         </form>
+  )
+
+  return (
+    <div className="page page--admin">
+      <div className="card card--admin card--wide">
+        <div className="admin-header">
+          <h1 className="titulo titulo--sm">Admin — O que há de BOM?</h1>
+          <button type="button" className="btn" onClick={handleLogout}>
+            Sair
+          </button>
+        </div>
+
+        <VoiceTester />
+
+        <hr className="divisor" />
+
+        {!form.id && formulario}
 
         <hr className="divisor" />
 
@@ -380,6 +386,15 @@ export default function AdminDashboard() {
         <ul className="lista-historias">
           {historias.map((h) => {
             const cor = corInfo(h.cor)
+
+            if (form.id === h.id) {
+              return (
+                <li key={h.id} className="lista-historias__item lista-historias__item--editando">
+                  {formulario}
+                </li>
+              )
+            }
+
             return (
               <li key={h.id} className="lista-historias__item">
                 <div className="lista-historias__cor" style={{ backgroundColor: cor?.hex }} />
@@ -403,7 +418,7 @@ export default function AdminDashboard() {
                   <button
                     type="button"
                     className="btn btn--perigo"
-                    onClick={() => handleExcluir(h.id, h.audio_url, h.imagem_url)}
+                    onClick={() => setExcluindo(h)}
                   >
                     Excluir
                   </button>
@@ -413,6 +428,26 @@ export default function AdminDashboard() {
           })}
         </ul>
       </div>
+
+      {excluindo && (
+        <div className="modal-overlay" onClick={() => setExcluindo(null)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2 className="modal-titulo">Excluir história?</h2>
+            <p className="modal-texto">
+              {excluindo.titulo ? `"${excluindo.titulo}"` : 'Esta história'} será excluída para sempre, junto
+              com o áudio e a imagem cadastrados. Essa ação não pode ser desfeita.
+            </p>
+            <div className="modal-acoes">
+              <button type="button" className="btn" onClick={() => setExcluindo(null)}>
+                Cancelar
+              </button>
+              <button type="button" className="btn btn--primary btn--perigo-solido" onClick={confirmarExclusao}>
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
