@@ -8,6 +8,13 @@ import Tela2Cor from './pages/Tela2Cor'
 import Tela3Historia from './pages/Tela3Historia'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
+import Login from './pages/Login'
+import EscolhaPerfil from './pages/EscolhaPerfil'
+import EscolhaFaixaProfessor from './pages/EscolhaFaixaProfessor'
+import ProfessorCor from './pages/ProfessorCor'
+import ProfessorHistoria from './pages/ProfessorHistoria'
+import AdminHistoriasProfessores from './pages/AdminHistoriasProfessores'
+import AdminUsuarios from './pages/AdminUsuarios'
 
 function App() {
   return (
@@ -23,8 +30,57 @@ function App() {
           <Route
             path="/admin"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute requireRole="admin">
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/professores"
+            element={
+              <ProtectedRoute requireRole="admin">
+                <AdminHistoriasProfessores />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/usuarios"
+            element={
+              <ProtectedRoute requireRole="admin">
+                <AdminUsuarios />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/escolha"
+            element={
+              <ProtectedRoute redirectTo="/login">
+                <EscolhaPerfil />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/escolha/professores"
+            element={
+              <ProtectedRoute redirectTo="/login">
+                <EscolhaFaixaProfessor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/professores/:faixa/cor"
+            element={
+              <ProtectedRoute redirectTo="/login">
+                <ProfessorCor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/professores/:faixa/:cor"
+            element={
+              <ProtectedRoute redirectTo="/login">
+                <ProfessorHistoria />
               </ProtectedRoute>
             }
           />

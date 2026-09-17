@@ -121,6 +121,87 @@ create policy "imagens_delete_authenticated"
   to authenticated
   using (bucket_id = 'imagens');
 
--- Depois de rodar este script, crie o usuário admin em:
+-- Histórias dos professores — tabela separada da dos alunos (público e faixas diferentes)
+create table if not exists public.historias_professores (
+  id uuid primary key default gen_random_uuid(),
+  faixa text not null check (faixa in ('12-35', '35-40')),
+  cor text not null check (cor in ('azul', 'amarelo', 'vermelho', 'roxo', 'verde', 'laranja')),
+  titulo text,
+  texto text not null,
+  audio_url text,
+  imagem_url text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists historias_professores_faixa_cor_idx on public.historias_professores (faixa, cor);
+
+alter table public.historias_professores enable row level security;
+
+-- Conteúdo de professor só é visível pra quem está logado (o app exige login antes dessa tela)
+drop policy if exists "historias_professores_select_authenticated" on public.historias_professores;
+create policy "historias_professores_select_authenticated"
+  on public.historias_professores
+  for select
+  to authenticated
+  using (true);
+
+drop policy if exists "historias_professores_insert_authenticated" on public.historias_professores;
+create policy "historias_professores_insert_authenticated"
+  on public.historias_professores
+  for insert
+  to authenticated
+  with check (true);
+
+drop policy if exists "historias_professores_update_authenticated" on public.historias_professores;
+create policy "historias_professores_update_authenticated"
+  on public.historias_professores
+  for update
+  to authenticated
+  using (true)
+  with check (true);
+
+drop policy if exists "historias_professores_delete_authenticated" on public.historias_professores;
+create policy "historias_professores_delete_authenticated"
+  on public.historias_professores
+  for delete
+  to authenticated
+  using (true);
+
+-- Reaproveita os buckets 'audios' e 'imagens' já criados acima (as políticas de storage
+-- são por bucket, não por tabela, então já cobrem os uploads dessa tabela também).
+
+-- Usuários do app (admin, professor, aluno) — um perfil por usuário do Supabase Auth.
+create table if not exists public.usuarios (
+  id uuid primary key references auth.users (id) on delete cascade,
+  nome text,
+  email text not null,
+  papel text not null check (papel in ('admin', 'professor', 'aluno')),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists usuarios_papel_idx on public.usuarios (papel);
+
+alter table public.usuarios enable row level security;
+
+-- Cada usuário pode ler só o próprio perfil — é o que o app usa pra saber se quem está logado
+-- é admin, professor ou aluno (e assim bloquear professor/aluno de entrar em /admin).
+drop policy if exists "usuarios_select_self" on public.usuarios;
+create policy "usuarios_select_self"
+  on public.usuarios
+  for select
+  to authenticated
+  using (id = auth.uid());
+
+-- Fora isso, sem políticas de insert/update/delete pra anon/authenticated de propósito:
+-- toda escrita nessa tabela (e a listagem de todos os usuários) passa pela Netlify Function
+-- em /api/usuarios,
+-- que usa a service role key (ignora RLS). Isso evita expor a lista de usuários/emails
+-- pela API pública do Supabase.
+
+-- Depois de rodar este script, crie o primeiro usuário admin em:
 -- Authentication > Users > Add user (email + senha)
--- Esse será o login usado em /admin/login no app.
+-- e depois insira o perfil dele manualmente (troque o email abaixo):
+-- insert into public.usuarios (id, email, papel)
+-- select id, email, 'admin' from auth.users where email = 'seu-email-admin@exemplo.com';
+-- Esse será o login usado em /admin/login e em /login no app. A partir daí, novos
+-- usuários (admin, professor ou aluno) podem ser cadastrados em /admin/usuarios.

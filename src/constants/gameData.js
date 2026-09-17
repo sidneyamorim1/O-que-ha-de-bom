@@ -7,6 +7,17 @@ export const FAIXAS_ETARIAS = [
   { value: '51-60', label: '51 a 60', emoji: '🏆', hint: 'Sabedoria e vitórias' },
 ]
 
+export const PAPEIS_USUARIO = [
+  { value: 'admin', label: 'Admin' },
+  { value: 'professor', label: 'Professor' },
+  { value: 'aluno', label: 'Aluno' },
+]
+
+export const FAIXAS_PROFESSOR = [
+  { value: '12-35', label: '12 a 35' },
+  { value: '35-40', label: '35 a 40' },
+]
+
 export const CORES = [
   { value: 'azul', label: 'Azul', hex: '#009FE3' },
   { value: 'amarelo', label: 'Amarelo', hex: '#F0D400' },
@@ -22,6 +33,14 @@ export function labelFaixaEtaria(value) {
 
 export function corInfo(value) {
   return CORES.find((c) => c.value === value)
+}
+
+export function labelFaixaProfessor(value) {
+  return FAIXAS_PROFESSOR.find((f) => f.value === value)?.label ?? value
+}
+
+export function labelPapel(value) {
+  return PAPEIS_USUARIO.find((p) => p.value === value)?.label ?? value
 }
 
 // Vozes Chirp3-HD (Google Cloud Text-to-Speech) em pt-BR — a camada mais realista disponível.

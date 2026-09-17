@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
-import { CORES, FAIXAS_ETARIAS, corInfo, labelFaixaEtaria, getVozPreferida, labelVoz } from '../constants/gameData'
+import { CORES, FAIXAS_PROFESSOR, corInfo, labelFaixaProfessor, getVozPreferida, labelVoz } from '../constants/gameData'
 import { AUDIO_BUCKET, IMAGEM_BUCKET, removeStorageFile, gerarAudioIA } from '../lib/storage'
 import AudioPlayer from '../components/AudioPlayer'
-import VoiceTester from '../components/VoiceTester'
-import { limparCacheHistorias } from '../lib/historias'
 
 const EMPTY_FORM = {
   id: null,
-  faixa_etaria: FAIXAS_ETARIAS[0].value,
+  faixa: FAIXAS_PROFESSOR[0].value,
   cor: CORES[0].value,
   titulo: '',
   texto: '',
@@ -21,7 +19,7 @@ const EMPTY_FORM = {
   removeImagem: false,
 }
 
-export default function AdminDashboard() {
+export default function AdminHistoriasProfessores() {
   const navigate = useNavigate()
   const [historias, setHistorias] = useState([])
   const [loading, setLoading] = useState(true)
@@ -45,11 +43,10 @@ export default function AdminDashboard() {
       return
     }
 
-    const voz = getVozPreferida(form.faixa_etaria)
     setGerandoAudioIA(true)
 
     try {
-      const file = await gerarAudioIA(form.texto, voz)
+      const file = await gerarAudioIA(form.texto, getVozPreferida())
 
       limparPreviewIA()
       setIaAudioPreviewUrl(URL.createObjectURL(file))
@@ -64,8 +61,8 @@ export default function AdminDashboard() {
   async function carregar() {
     setLoading(true)
     setError(null)
-    let query = supabase.from('historias').select('*').order('created_at', { ascending: false })
-    if (filtroFaixa) query = query.eq('faixa_etaria', filtroFaixa)
+    let query = supabase.from('historias_professores').select('*').order('created_at', { ascending: false })
+    if (filtroFaixa) query = query.eq('faixa', filtroFaixa)
     if (filtroCor) query = query.eq('cor', filtroCor)
     const { data, error } = await query
     if (error) {
@@ -90,7 +87,7 @@ export default function AdminDashboard() {
     limparPreviewIA()
     setForm({
       id: historia.id,
-      faixa_etaria: historia.faixa_etaria,
+      faixa: historia.faixa,
       cor: historia.cor,
       titulo: historia.titulo ?? '',
       texto: historia.texto,
@@ -111,12 +108,11 @@ export default function AdminDashboard() {
   async function confirmarExclusao() {
     if (!excluindo) return
     const { id, audio_url: audioUrl, imagem_url: imagemUrl } = excluindo
-    const { error } = await supabase.from('historias').delete().eq('id', id)
+    const { error } = await supabase.from('historias_professores').delete().eq('id', id)
     if (error) {
       window.alert('Erro ao excluir: ' + error.message)
       return
     }
-    limparCacheHistorias()
     if (audioUrl) await removeStorageFile(audioUrl, AUDIO_BUCKET)
     if (imagemUrl) await removeStorageFile(imagemUrl, IMAGEM_BUCKET)
     setExcluindo(null)
@@ -164,7 +160,7 @@ export default function AdminDashboard() {
     }
 
     const payload = {
-      faixa_etaria: form.faixa_etaria,
+      faixa: form.faixa,
       cor: form.cor,
       titulo: form.titulo.trim() || null,
       texto: form.texto.trim(),
@@ -173,8 +169,8 @@ export default function AdminDashboard() {
     }
 
     const { error } = form.id
-      ? await supabase.from('historias').update(payload).eq('id', form.id)
-      : await supabase.from('historias').insert(payload)
+      ? await supabase.from('historias_professores').update(payload).eq('id', form.id)
+      : await supabase.from('historias_professores').insert(payload)
 
     setSaving(false)
 
@@ -182,8 +178,6 @@ export default function AdminDashboard() {
       window.alert('Erro ao salvar: ' + error.message)
       return
     }
-
-    limparCacheHistorias()
 
     // Se trocou ou removeu o áudio/imagem antigos, limpa o arquivo anterior do storage
     const trocouAudio = form.audioFile || form.removeAudio
@@ -202,149 +196,123 @@ export default function AdminDashboard() {
 
   const formulario = (
     <form className="form form--grid" onSubmit={handleSubmit}>
-          <h2 className="form-titulo">{form.id ? 'Editar história' : 'Nova história'}</h2>
-          <label className="form-field">
-            Faixa etária
-            <select
-              value={form.faixa_etaria}
-              onChange={(e) => setForm((f) => ({ ...f, faixa_etaria: e.target.value }))}
-            >
-              {FAIXAS_ETARIAS.map((f) => (
-                <option key={f.value} value={f.value}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="form-field">
-            Cor
-            <select value={form.cor} onChange={(e) => setForm((f) => ({ ...f, cor: e.target.value }))}>
-              {CORES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="form-field form-field--full">
-            Título (opcional)
-            <input
-              type="text"
-              value={form.titulo}
-              onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
-            />
-          </label>
-          <label className="form-field form-field--full">
-            Texto da história
-            <textarea
-              value={form.texto}
-              onChange={(e) => setForm((f) => ({ ...f, texto: e.target.value }))}
-              rows={5}
-              required
-            />
-          </label>
-          <p className="form-hint form-field--full">
-            O texto acima é sempre exibido e é o que o leitor de voz do navegador lê em voz alta. Se quiser,
-            envie um MP3 gravado abaixo — quando houver um áudio, ele é tocado no lugar do leitor de voz.
-          </p>
-          <label className="form-field form-field--full">
-            Áudio MP3 (opcional)
-            <input
-              type="file"
-              accept="audio/mpeg,audio/mp3,.mp3"
-              onChange={(e) => {
-                limparPreviewIA()
-                setForm((f) => ({ ...f, audioFile: e.target.files?.[0] ?? null, removeAudio: false }))
-              }}
-            />
-          </label>
-          <div className="form-field--full gerar-audio-ia">
-            <button
-              type="button"
-              className="btn"
-              onClick={handleGerarAudioIA}
-              disabled={gerandoAudioIA || !form.texto.trim()}
-            >
-              {gerandoAudioIA
-                ? 'Gerando narração...'
-                : `🤖 Gerar narração com IA (${labelVoz(getVozPreferida(form.faixa_etaria))})`}
-            </button>
-            <span className="form-hint">Pra trocar a voz, use o testador lá em cima.</span>
-          </div>
-          {iaAudioPreviewUrl && (
-            <div className="form-field--full audio-atual">
-              <span>Narração gerada por IA:</span>
-              <AudioPlayer src={iaAudioPreviewUrl} />
-            </div>
-          )}
-          {form.audioFile && !iaAudioPreviewUrl && (
-            <p className="form-hint form-field--full">Novo arquivo selecionado: {form.audioFile.name}</p>
-          )}
-          {!form.audioFile && form.audioUrl && !form.removeAudio && (
-            <div className="form-field--full audio-atual">
-              <span>Áudio atual:</span>
-              <AudioPlayer src={form.audioUrl} />
-              <button
-                type="button"
-                className="btn btn--perigo"
-                onClick={() => setForm((f) => ({ ...f, removeAudio: true }))}
-              >
-                Remover áudio
-              </button>
-            </div>
-          )}
-          {form.removeAudio && (
-            <p className="form-hint form-field--full">O áudio será removido ao salvar.</p>
-          )}
-          <label className="form-field form-field--full">
-            Imagem (opcional)
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) =>
-                setForm((f) => ({ ...f, imagemFile: e.target.files?.[0] ?? null, removeImagem: false }))
-              }
-            />
-          </label>
-          {form.imagemFile && (
-            <p className="form-hint form-field--full">Novo arquivo selecionado: {form.imagemFile.name}</p>
-          )}
-          {!form.imagemFile && form.imagemUrl && !form.removeImagem && (
-            <div className="form-field--full imagem-atual">
-              <img src={form.imagemUrl} alt="Imagem atual da história" className="imagem-preview" />
-              <button
-                type="button"
-                className="btn btn--perigo"
-                onClick={() => setForm((f) => ({ ...f, removeImagem: true }))}
-              >
-                Remover imagem
-              </button>
-            </div>
-          )}
-          {form.removeImagem && (
-            <p className="form-hint form-field--full">A imagem será removida ao salvar.</p>
-          )}
-          <div className="form-field--full form-actions">
-            <button type="submit" className="btn btn--primary" disabled={saving}>
-              {saving ? 'Salvando...' : form.id ? 'Salvar alterações' : 'Adicionar história'}
-            </button>
-            {form.id && (
-              <button type="button" className="btn" onClick={handleCancelarEdicao}>
-                Cancelar edição
-              </button>
-            )}
-          </div>
-        </form>
+      <h2 className="form-titulo">{form.id ? 'Editar história' : 'Nova história'}</h2>
+      <label className="form-field">
+        Faixa
+        <select value={form.faixa} onChange={(e) => setForm((f) => ({ ...f, faixa: e.target.value }))}>
+          {FAIXAS_PROFESSOR.map((f) => (
+            <option key={f.value} value={f.value}>
+              {f.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="form-field">
+        Cor
+        <select value={form.cor} onChange={(e) => setForm((f) => ({ ...f, cor: e.target.value }))}>
+          {CORES.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="form-field form-field--full">
+        Título (opcional)
+        <input type="text" value={form.titulo} onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))} />
+      </label>
+      <label className="form-field form-field--full">
+        Texto da história
+        <textarea
+          value={form.texto}
+          onChange={(e) => setForm((f) => ({ ...f, texto: e.target.value }))}
+          rows={5}
+          required
+        />
+      </label>
+      <p className="form-hint form-field--full">
+        O texto acima é sempre exibido e é o que o leitor de voz do navegador lê em voz alta. Se quiser, envie um
+        MP3 gravado abaixo — quando houver um áudio, ele é tocado no lugar do leitor de voz.
+      </p>
+      <label className="form-field form-field--full">
+        Áudio MP3 (opcional)
+        <input
+          type="file"
+          accept="audio/mpeg,audio/mp3,.mp3"
+          onChange={(e) => {
+            limparPreviewIA()
+            setForm((f) => ({ ...f, audioFile: e.target.files?.[0] ?? null, removeAudio: false }))
+          }}
+        />
+      </label>
+      <div className="form-field--full gerar-audio-ia">
+        <button
+          type="button"
+          className="btn"
+          onClick={handleGerarAudioIA}
+          disabled={gerandoAudioIA || !form.texto.trim()}
+        >
+          {gerandoAudioIA ? 'Gerando narração...' : `🤖 Gerar narração com IA (${labelVoz(getVozPreferida())})`}
+        </button>
+      </div>
+      {iaAudioPreviewUrl && (
+        <div className="form-field--full audio-atual">
+          <span>Narração gerada por IA:</span>
+          <AudioPlayer src={iaAudioPreviewUrl} />
+        </div>
+      )}
+      {form.audioFile && !iaAudioPreviewUrl && (
+        <p className="form-hint form-field--full">Novo arquivo selecionado: {form.audioFile.name}</p>
+      )}
+      {!form.audioFile && form.audioUrl && !form.removeAudio && (
+        <div className="form-field--full audio-atual">
+          <span>Áudio atual:</span>
+          <AudioPlayer src={form.audioUrl} />
+          <button type="button" className="btn btn--perigo" onClick={() => setForm((f) => ({ ...f, removeAudio: true }))}>
+            Remover áudio
+          </button>
+        </div>
+      )}
+      {form.removeAudio && <p className="form-hint form-field--full">O áudio será removido ao salvar.</p>}
+      <label className="form-field form-field--full">
+        Imagem (opcional)
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setForm((f) => ({ ...f, imagemFile: e.target.files?.[0] ?? null, removeImagem: false }))}
+        />
+      </label>
+      {form.imagemFile && <p className="form-hint form-field--full">Novo arquivo selecionado: {form.imagemFile.name}</p>}
+      {!form.imagemFile && form.imagemUrl && !form.removeImagem && (
+        <div className="form-field--full imagem-atual">
+          <img src={form.imagemUrl} alt="Imagem atual da história" className="imagem-preview" />
+          <button type="button" className="btn btn--perigo" onClick={() => setForm((f) => ({ ...f, removeImagem: true }))}>
+            Remover imagem
+          </button>
+        </div>
+      )}
+      {form.removeImagem && <p className="form-hint form-field--full">A imagem será removida ao salvar.</p>}
+      <div className="form-field--full form-actions">
+        <button type="submit" className="btn btn--primary" disabled={saving}>
+          {saving ? 'Salvando...' : form.id ? 'Salvar alterações' : 'Adicionar história'}
+        </button>
+        {form.id && (
+          <button type="button" className="btn" onClick={handleCancelarEdicao}>
+            Cancelar edição
+          </button>
+        )}
+      </div>
+    </form>
   )
 
   return (
     <div className="page page--admin">
       <div className="card card--admin card--wide">
         <div className="admin-header">
-          <h1 className="titulo titulo--sm">Admin — O que há de BOM?</h1>
+          <h1 className="titulo titulo--sm">Admin — Histórias dos professores</h1>
           <div className="form-actions">
-            <button type="button" className="btn" onClick={() => navigate('/admin/professores')}>
-              Histórias professores
+            <button type="button" className="btn" onClick={() => navigate('/admin')}>
+              Histórias alunos
             </button>
             <button type="button" className="btn" onClick={() => navigate('/admin/usuarios')}>
               Usuários
@@ -355,20 +323,16 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <VoiceTester />
-
-        <hr className="divisor" />
-
         {!form.id && formulario}
 
         <hr className="divisor" />
 
         <div className="admin-filtros">
           <label className="form-field">
-            Filtrar por idade
+            Filtrar por faixa
             <select value={filtroFaixa} onChange={(e) => setFiltroFaixa(e.target.value)}>
               <option value="">Todas</option>
-              {FAIXAS_ETARIAS.map((f) => (
+              {FAIXAS_PROFESSOR.map((f) => (
                 <option key={f.value} value={f.value}>
                   {f.label}
                 </option>
@@ -412,26 +376,18 @@ export default function AdminDashboard() {
                 <div className="lista-historias__cor" style={{ backgroundColor: cor?.hex }} />
                 <div className="lista-historias__conteudo">
                   <p className="lista-historias__meta">
-                    {labelFaixaEtaria(h.faixa_etaria)} anos · {cor?.label}
+                    {labelFaixaProfessor(h.faixa)} · {cor?.label}
                   </p>
                   {h.titulo && <p className="lista-historias__titulo">{h.titulo}</p>}
                   <p className="lista-historias__texto">{h.texto}</p>
-                  {h.audio_url && (
-                    <p className="lista-historias__meta lista-historias__meta--audio">🎵 tem áudio gravado</p>
-                  )}
-                  {h.imagem_url && (
-                    <p className="lista-historias__meta lista-historias__meta--audio">🖼️ tem imagem</p>
-                  )}
+                  {h.audio_url && <p className="lista-historias__meta lista-historias__meta--audio">🎵 tem áudio gravado</p>}
+                  {h.imagem_url && <p className="lista-historias__meta lista-historias__meta--audio">🖼️ tem imagem</p>}
                 </div>
                 <div className="lista-historias__acoes">
                   <button type="button" className="btn" onClick={() => handleEditar(h)}>
                     Editar
                   </button>
-                  <button
-                    type="button"
-                    className="btn btn--perigo"
-                    onClick={() => setExcluindo(h)}
-                  >
+                  <button type="button" className="btn btn--perigo" onClick={() => setExcluindo(h)}>
                     Excluir
                   </button>
                 </div>
@@ -446,8 +402,8 @@ export default function AdminDashboard() {
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
             <h2 className="modal-titulo">Excluir história?</h2>
             <p className="modal-texto">
-              {excluindo.titulo ? `"${excluindo.titulo}"` : 'Esta história'} será excluída para sempre, junto
-              com o áudio e a imagem cadastrados. Essa ação não pode ser desfeita.
+              {excluindo.titulo ? `"${excluindo.titulo}"` : 'Esta história'} será excluída para sempre, junto com o
+              áudio e a imagem cadastrados. Essa ação não pode ser desfeita.
             </p>
             <div className="modal-acoes">
               <button type="button" className="btn" onClick={() => setExcluindo(null)}>

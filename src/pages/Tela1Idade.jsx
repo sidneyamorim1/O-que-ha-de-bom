@@ -39,6 +39,9 @@ export default function Tela1Idade() {
             </button>
           ))}
         </div>
+        <button type="button" className="btn-voltar" onClick={() => navigate('/escolha')}>
+          ← Voltar
+        </button>
       </div>
     </div>
   )

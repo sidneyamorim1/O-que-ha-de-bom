@@ -358,6 +358,61 @@ body {
   font-weight: 400;
 }
 
+/* ===== GRID DE OPÇÕES (2 cards) ===== */
+.grid-opcoes {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 0 auto;
+}
+
+.btn-opcao {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 16px;
+  border-radius: 18px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--texto);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+}
+
+.btn-opcao:hover {
+  background: var(--glass-bg-hover);
+  border-color: var(--glass-border-hover);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+.btn-opcao:active {
+  transform: translateY(-1px);
+}
+
+.btn-opcao--estatico {
+  cursor: default;
+}
+
+.btn-opcao--estatico:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-opcao__emoji {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.btn-opcao__label {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: 'Fredoka', system-ui, sans-serif;
+}
+
 /* ===== GRID DE CORES ===== */
 .grid-cores {
   display: grid;
@@ -699,6 +754,40 @@ body {
 .form-field textarea:focus {
   outline: none;
   border-color: var(--acento-secundario);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.input-com-icone {
+  position: relative;
+  display: flex;
+}
+
+.input-com-icone input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.btn-olho {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--texto-suave);
+  padding: 6px;
+  border-radius: 8px;
+  opacity: 0.85;
+  transition: opacity 0.2s, background 0.2s, color 0.2s;
+}
+
+.btn-olho:hover {
+  opacity: 1;
+  color: var(--texto);
   background: rgba(255, 255, 255, 0.08);
 }
 
