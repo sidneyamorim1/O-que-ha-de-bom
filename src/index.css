@@ -162,8 +162,8 @@ body {
 }
 
 .card--compacto {
-  max-width: 640px;
-  padding: 32px 36px 40px;
+  max-width: 545px;
+  padding: clamp(18px, 3.4vh, 27px) 31px clamp(22px, 4vh, 34px);
 }
 
 /* ===== MODAL DE CONFIRMAÇÃO ===== */
@@ -483,23 +483,23 @@ body {
 }
 
 .historia-titulo {
-  font-size: 21px;
-  margin: 6px 0 14px;
+  font-size: 18px;
+  margin: clamp(3px, 0.6vh, 5px) 0 clamp(6px, 1.4vh, 12px);
   font-family: 'Fredoka', system-ui, sans-serif;
   color: var(--acento-primario);
 }
 
 .historia-imagem-wrap {
   position: relative;
-  margin: 0 0 14px;
+  margin: 0 0 clamp(8px, 1.4vh, 12px);
 }
 
 .historia-imagem {
   display: block;
   width: 100%;
-  max-height: 256px;
+  max-height: clamp(120px, 22vh, 218px);
   object-fit: cover;
-  border-radius: 16px;
+  border-radius: 14px;
   border: 1px solid var(--glass-border);
 }
 
@@ -507,20 +507,20 @@ body {
 .cor-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px 5px 8px;
+  gap: 5px;
+  padding: 4px 10px 4px 7px;
   border-radius: 999px;
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--texto-suave);
-  margin: 0 0 16px;
+  margin: 0 0 clamp(8px, 1.6vh, 14px);
 }
 
 .cor-chip__ponto {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   flex-shrink: 0;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
@@ -542,14 +542,14 @@ body {
   position: relative;
   text-align: left;
   white-space: pre-wrap;
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1.7;
-  margin: 14px auto 20px;
+  margin: clamp(8px, 1.8vh, 12px) auto clamp(10px, 2.4vh, 17px);
   max-width: 65ch;
   color: var(--texto);
-  padding: 26px 22px 21px;
+  padding: clamp(14px, 3vh, 22px) 19px clamp(12px, 2.6vh, 18px);
   background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
@@ -558,7 +558,7 @@ body {
   content: '"';
   position: absolute;
   font-family: 'Fredoka', system-ui, sans-serif;
-  font-size: 38px;
+  font-size: 32px;
   line-height: 1;
   color: var(--acento-primario);
   opacity: 0.25;
@@ -567,30 +567,41 @@ body {
 }
 
 .historia-texto::before {
-  top: 4px;
-  left: 12px;
+  top: 3px;
+  left: 10px;
 }
 
 .historia-texto::after {
-  bottom: -6px;
-  right: 12px;
+  bottom: -5px;
+  right: 10px;
 }
 
 /* ===== TTS PLAYER ===== */
 .tts-player {
-  margin: 16px 0 8px;
+  margin: clamp(9px, 1.8vh, 14px) 0 clamp(4px, 1vh, 7px);
 }
 
 .tts-controls {
   display: flex;
-  gap: 10px;
+  gap: 9px;
   justify-content: center;
 }
 
 .tts-unsupported {
-  font-size: 16px;
+  font-size: 14px;
   color: var(--texto-suave);
-  margin: 10px 0;
+  margin: 9px 0;
+}
+
+/* Elementos da tela de história ficam levemente menores para caber sem exigir zoom-out */
+.page--historia .btn {
+  font-size: 14px;
+  padding: clamp(7px, 1.4vh, 10px) 20px;
+}
+
+.page--historia .audio-player {
+  margin: clamp(9px, 1.8vh, 14px) 0 clamp(4px, 1vh, 7px);
+  height: clamp(30px, 5vh, 40px);
 }
 
 /* ===== BOTÕES GERAIS ===== */
