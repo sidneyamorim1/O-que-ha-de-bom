@@ -1026,6 +1026,74 @@ body {
 }
 
 /* ===== RESPONSIVIDADE ===== */
+/* Notebooks de 13" costumam ter pouca altura de janela (~800px com a barra do navegador) —
+   por padrão as telas eram desenhadas pra monitores grandes e ficavam enormes/precisando
+   de zoom-out nesses notebooks. Esse bloco encolhe o essencial quando a altura é curta. */
+@media (max-height: 820px) {
+  .page {
+    padding: 20px 24px;
+  }
+
+  .card {
+    padding: 28px 32px 32px;
+  }
+
+  .card--compacto {
+    padding: clamp(14px, 2.6vh, 20px) 24px clamp(16px, 3vh, 26px);
+  }
+
+  .titulo-wrapper {
+    margin-bottom: 16px;
+  }
+
+  .titulo-logo {
+    width: 100px;
+    height: 100px;
+  }
+
+  .titulo {
+    font-size: clamp(26px, 4vw, 36px);
+  }
+
+  .subtitulo {
+    font-size: 16px;
+    margin: 0 0 20px;
+  }
+
+  .grid-idades {
+    gap: 10px;
+  }
+
+  .btn-idade {
+    padding: 14px 10px;
+    gap: 4px;
+  }
+
+  .btn-idade__emoji {
+    font-size: 24px;
+  }
+
+  .btn-idade__label {
+    font-size: 15px;
+  }
+
+  .grid-opcoes {
+    gap: 10px;
+  }
+
+  .btn-opcao {
+    padding: 18px 14px;
+  }
+
+  .grid-cores {
+    margin: 0 auto 20px;
+  }
+
+  .color-swatch__icon {
+    width: 70px;
+  }
+}
+
 @media (max-width: 700px) {
   .card {
     padding: 36px 24px 40px;
