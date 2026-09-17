@@ -40,29 +40,52 @@ export default function EscolhaPerfil() {
   if (!papel) return null
 
   return (
-    <div className="page">
-      <div className="card card--admin">
-        <div className="titulo-wrapper">
-          <img src={logo} alt="O que há de Bom?" className="titulo-logo" />
-          <h1 className="titulo">
-            O que há de
-            <br />
-            BOM?
+    <div className="page page--single-screen">
+      <div className="card card--perfil">
+        <div className="titulo-wrapper titulo-wrapper--compacto">
+          <img src={logo} alt="O que há de Bom?" className="titulo-logo titulo-logo--otimizado" />
+          <h1 className="titulo titulo--principal">
+            O que há de <span>BOM?</span>
           </h1>
         </div>
-        <p className="subtitulo">Quem está acessando?</p>
-        <div className="grid-opcoes">
-          <button type="button" className="btn-opcao" onClick={() => navigate('/escolha/professores')}>
-            <span className="btn-opcao__emoji">👩‍🏫</span>
-            <span className="btn-opcao__label">Professores</span>
+        <p className="subtitulo subtitulo--clean">Selecione o modo de experiência:</p>
+
+        <div className="grid-perfis">
+          <button
+            type="button"
+            className="card-perfil-item card-perfil-item--prof"
+            onClick={() => navigate('/escolha/professores')}
+          >
+            <div className="card-perfil-item__icon">👩‍🏫</div>
+            <div className="card-perfil-item__info">
+              <span className="card-perfil-item__badge">Formação & Prática</span>
+              <h3 className="card-perfil-item__title">Professores</h3>
+              <p className="card-perfil-item__desc">
+                Jornada pedagógica, histórias formativas e reflexões para educadores.
+              </p>
+            </div>
+            <span className="card-perfil-item__arrow">→</span>
           </button>
-          <button type="button" className="btn-opcao" onClick={() => navigate('/')}>
-            <span className="btn-opcao__emoji">🧒</span>
-            <span className="btn-opcao__label">Alunos</span>
+
+          <button
+            type="button"
+            className="card-perfil-item card-perfil-item--aluno"
+            onClick={() => navigate('/')}
+          >
+            <div className="card-perfil-item__icon">🧒</div>
+            <div className="card-perfil-item__info">
+              <span className="card-perfil-item__badge">Jogo de Tabuleiro</span>
+              <h3 className="card-perfil-item__title">Alunos</h3>
+              <p className="card-perfil-item__desc">
+                Sorteio da roleta, desafios de cores e narrações para a turma.
+              </p>
+            </div>
+            <span className="card-perfil-item__arrow">→</span>
           </button>
         </div>
+
         <button type="button" className="btn-voltar" onClick={handleLogout}>
-          Sair
+          🚪 Encerrar sessão
         </button>
       </div>
     </div>

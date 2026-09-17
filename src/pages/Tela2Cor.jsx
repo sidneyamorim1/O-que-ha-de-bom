@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CORES } from '../constants/gameData'
+import { CORES, labelFaixaEtaria } from '../constants/gameData'
 import { useApp } from '../context/AppContext'
 import ColorSwatchButton from '../components/ColorSwatchButton'
 import { anteciparHistorias } from '../lib/historias'
@@ -28,17 +28,25 @@ export default function Tela2Cor() {
   if (!selectedAge) return null
 
   return (
-    <div className="page">
-      <div className="card">
-        <div className="titulo-wrapper">
-          <img src={logo} alt="O que há de Bom?" className="titulo-logo" />
-          <h1 className="titulo">
-            O que há de
-            <br />
-            BOM?
+    <div className="page page--single-screen">
+      <div className="card card--roleta">
+        <div className="game-card-topbar">
+          <span className="game-card-tag">
+            🧒 Faixa selecionada: <strong>{labelFaixaEtaria(selectedAge)} anos</strong>
+          </span>
+          <button type="button" className="game-card-link" onClick={() => navigate('/')}>
+            Trocar idade
+          </button>
+        </div>
+
+        <div className="titulo-wrapper titulo-wrapper--compacto">
+          <img src={logo} alt="O que há de Bom?" className="titulo-logo titulo-logo--otimizado" />
+          <h1 className="titulo titulo--principal">
+            O que há de <span>BOM?</span>
           </h1>
         </div>
-        <p className="subtitulo">Qual cor saiu na roleta?</p>
+        <p className="subtitulo subtitulo--clean">Gire a roleta e escolha a cor sorteada:</p>
+
         <div className="grid-cores">
           {CORES.map((cor) => (
             <ColorSwatchButton
@@ -49,8 +57,9 @@ export default function Tela2Cor() {
             />
           ))}
         </div>
+
         <button type="button" className="btn-voltar" onClick={() => navigate('/')}>
-          ← Trocar idade
+          ← Voltar para seleção de idade
         </button>
       </div>
     </div>

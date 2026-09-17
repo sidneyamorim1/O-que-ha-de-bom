@@ -29,15 +29,13 @@ function Historia({ faixa, cor }) {
   const navigate = useNavigate()
   const [{ status, historia }, setResultado] = useState({ status: 'loading', historia: null })
 
-  useEffect(() => {
-    let active = true
+  function buscar() {
     supabase
       .from('historias_professores')
       .select('*')
       .eq('faixa', faixa)
       .eq('cor', cor)
       .then(({ data, error }) => {
-        if (!active) return
         if (error) {
           console.error(error)
           setResultado({ status: 'error', historia: null })
@@ -45,72 +43,110 @@ function Historia({ faixa, cor }) {
         }
         setResultado(sortear(data ?? []))
       })
+  }
 
-    return () => {
-      active = false
-    }
+  useEffect(() => {
+    buscar()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [faixa, cor])
 
   function handleJogarNovamente() {
     navigate(`/professores/${faixa}/cor`)
   }
 
+  function handleSortearOutra() {
+    setResultado({ status: 'loading', historia: null })
+    buscar()
+  }
+
   const corInfoAtual = corInfo(cor)
 
   return (
     <div className="page page--historia">
-      <div className="card card--compacto">
-        {status === 'loading' && <p className="mensagem">✨ Sorteando uma história...</p>}
+      <div className="card card--historia-card" style={{ '--cor-tema': corInfoAtual?.hex || '#f7c948' }}>
+        <div className="historia-top-bar">
+          <span className="historia-badge historia-badge--prof">
+            👨‍🏫 Faixa {labelFaixaProfessor(faixa)}
+          </span>
+          {corInfoAtual && (
+            <span className="historia-badge historia-badge--cor">
+              <span className="cor-ponto" style={{ backgroundColor: corInfoAtual.hex }} />
+              Cor: {corInfoAtual.label}
+            </span>
+          )}
+        </div>
+
+        {status === 'loading' && (
+          <div className="historia-loading-box">
+            <div className="spinner" />
+            <p className="mensagem">✨ Selecionando reflexão pedagógica...</p>
+          </div>
+        )}
 
         {status === 'error' && (
-          <p className="mensagem mensagem--erro">
-            Não foi possível buscar a história agora. Verifique sua conexão e tente novamente.
-          </p>
+          <div className="admin-alert admin-alert--erro" style={{ margin: '20px 0' }}>
+            <span>⚠️</span>
+            <p>Não foi possível carregar o conteúdo. Verifique sua conexão e tente novamente.</p>
+          </div>
         )}
 
         {status === 'empty' && (
-          <p className="mensagem">
-            Ainda não há histórias cadastradas para {labelFaixaProfessor(faixa)} na cor {corInfoAtual?.label}.
-          </p>
+          <div className="historia-empty-box">
+            <span style={{ fontSize: 36 }}>📭</span>
+            <p className="mensagem">
+              Ainda não há histórias cadastradas para <strong>Faixa {labelFaixaProfessor(faixa)}</strong> na cor{' '}
+              <strong>{corInfoAtual?.label}</strong>.
+            </p>
+          </div>
         )}
 
         {status === 'ok' && historia && (
           <div className="historia-reveal">
             {historia.titulo && <h2 className="historia-titulo">{historia.titulo}</h2>}
-            {historia.imagem_url ? (
+
+            {historia.imagem_url && (
               <div className="historia-imagem-wrap">
                 <img
                   src={historia.imagem_url}
-                  alt={historia.titulo || 'Ilustração da história'}
+                  alt={historia.titulo || 'Ilustração'}
                   className="historia-imagem"
                 />
-                {corInfoAtual && (
-                  <span className="cor-chip cor-chip--sobreposto">
-                    <span className="cor-chip__ponto" style={{ backgroundColor: corInfoAtual.hex }} />
-                    Cor: {corInfoAtual.label}
-                  </span>
-                )}
               </div>
-            ) : (
-              corInfoAtual && (
-                <span className="cor-chip">
-                  <span className="cor-chip__ponto" style={{ backgroundColor: corInfoAtual.hex }} />
-                  Cor: {corInfoAtual.label}
-                </span>
-              )
             )}
-            {historia.audio_url ? (
-              <AudioPlayer src={historia.audio_url} />
-            ) : (
-              <TextToSpeechPlayer texto={historia.texto} />
-            )}
-            <p className="historia-texto">{historia.texto}</p>
+
+            <div className="historia-audio-wrapper">
+              {historia.audio_url ? (
+                <AudioPlayer src={historia.audio_url} />
+              ) : (
+                <TextToSpeechPlayer texto={historia.texto} />
+              )}
+            </div>
+
+            <div className="historia-texto-box">
+              <span className="historia-aspas historia-aspas--abre">“</span>
+              <p className="historia-texto">{historia.texto}</p>
+              <span className="historia-aspas historia-aspas--fecha">”</span>
+            </div>
           </div>
         )}
 
-        <button type="button" className="btn btn--primary btn--full" onClick={handleJogarNovamente}>
-          🎲 Jogar novamente
-        </button>
+        <div className="historia-acoes-rodape">
+          <button
+            type="button"
+            className="btn btn--primary btn--full btn--brilho"
+            onClick={handleJogarNovamente}
+          >
+            🎲 Girar a roleta novamente
+          </button>
+          <button
+            type="button"
+            className="btn btn--secundario btn--full"
+            onClick={handleSortearOutra}
+            disabled={status === 'loading'}
+          >
+            🔄 Outra história desta cor
+          </button>
+        </div>
       </div>
     </div>
   )

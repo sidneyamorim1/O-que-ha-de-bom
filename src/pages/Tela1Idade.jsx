@@ -9,6 +9,7 @@ export default function Tela1Idade() {
   const navigate = useNavigate()
   const { setSelectedAge, setSelectedColor } = useApp()
   const [rodape, setRodape] = useState(null) // null | 'voltar' | 'sair'
+  const [estaLogado, setEstaLogado] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -16,7 +17,11 @@ export default function Tela1Idade() {
     async function carregarRodape() {
       const { data: sessionData } = await supabase.auth.getSession()
       const userId = sessionData.session?.user?.id
-      if (!userId) return // visitante anônimo (fluxo original do jogo) — sem rodapé
+      if (!userId) {
+        if (active) setEstaLogado(false)
+        return
+      }
+      if (active) setEstaLogado(true)
 
       const { data } = await supabase.from('usuarios').select('papel').eq('id', userId).maybeSingle()
       if (active) setRodape(data?.papel === 'aluno' ? 'sair' : 'voltar')
@@ -40,17 +45,31 @@ export default function Tela1Idade() {
   }
 
   return (
-    <div className="page">
-      <div className="card">
-        <div className="titulo-wrapper">
-          <img src={logo} alt="O que há de Bom?" className="titulo-logo" />
-          <h1 className="titulo">
-            O que há de
-            <br />
-            BOM?
+    <div className="page page--single-screen">
+      <div className="card card--idade">
+        {/* Barra sutil de navegação no topo do card */}
+        <div className="game-card-topbar">
+          <span className="game-card-tag">🎲 Tabuleiro Interativo</span>
+          {!estaLogado && (
+            <button
+              type="button"
+              className="game-card-link"
+              onClick={() => navigate('/login')}
+              title="Acesso para educadores e administradores"
+            >
+              Área do Professor 👨‍🏫
+            </button>
+          )}
+        </div>
+
+        <div className="titulo-wrapper titulo-wrapper--compacto">
+          <img src={logo} alt="O que há de Bom?" className="titulo-logo titulo-logo--otimizado" />
+          <h1 className="titulo titulo--principal">
+            O que há de <span>BOM?</span>
           </h1>
         </div>
-        <p className="subtitulo">Selecione sua faixa etária</p>
+        <p className="subtitulo subtitulo--clean">Selecione sua faixa etária para começar:</p>
+
         <div className="grid-idades">
           {FAIXAS_ETARIAS.map((faixa) => (
             <button
@@ -65,14 +84,15 @@ export default function Tela1Idade() {
             </button>
           ))}
         </div>
+
         {rodape === 'voltar' && (
           <button type="button" className="btn-voltar" onClick={() => navigate('/escolha')}>
-            ← Voltar
+            ← Voltar para Escolha de Perfil
           </button>
         )}
         {rodape === 'sair' && (
           <button type="button" className="btn-voltar" onClick={handleSair}>
-            Sair
+            Encerrar sessão
           </button>
         )}
       </div>
