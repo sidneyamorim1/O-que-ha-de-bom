@@ -74,49 +74,72 @@ export default function VoiceTester() {
 
   return (
     <div className="voice-tester">
-      <h2 className="form-titulo">Vozes padrão (Google Cloud TTS)</h2>
-      <p className="form-hint">
-        Uma voz pra narrador feminino e outra pra masculino — usadas em todas as histórias (alunos e
-        professores) marcadas com aquele gênero, e sugeridas automaticamente ao cadastrar uma nova.
-      </p>
+      <div className="voice-tester__header">
+        <h3 className="admin-panel-title">Configuração de Vozes Neurais (Chirp3-HD)</h3>
+        <p className="form-hint">
+          Defina as vozes padrão feminina e masculina. Estas vozes serão aplicadas automaticamente ao
+          salvar histórias sem áudio MP3 próprio e no processamento em massa.
+        </p>
+      </div>
 
       <label className="form-field form-field--full">
-        Texto de teste
-        <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={2} />
+        <div className="form-field__header">
+          <span>Frase de teste</span>
+          <span className="form-field__count">Ouvir com entonação em português</span>
+        </div>
+        <textarea
+          value={texto}
+          onChange={(e) => setTexto(e.target.value)}
+          rows={2}
+          placeholder="Digite um texto para testar a dicção da voz..."
+        />
       </label>
 
       {erro && <p className="mensagem mensagem--erro">{erro}</p>}
 
-      {GENEROS_NARRADOR.map((g) => {
-        const voz = g.value === 'masculino' ? vozMasculina : vozFeminina
-        const audioRef = g.value === 'masculino' ? audioRefMasculino : audioRefFeminino
-        return (
-          <div key={g.value} className="voice-tester__genero">
-            <label className="form-field form-field--full">
-              Voz {g.value === 'masculino' ? 'masculina' : 'feminina'} padrão
-              <select value={voz} onChange={(e) => handleVozChange(g.value, e.target.value)}>
-                {VOZES_TTS.map((v) => (
-                  <option key={v.name} value={v.name}>
-                    {v.name.replace('pt-BR-Chirp3-HD-', '')} — {v.genero}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="voice-tester__acoes">
-              <button
-                type="button"
-                className="btn"
-                onClick={() => testar(g.value, voz)}
-                disabled={testandoGenero === g.value}
-              >
-                {testandoGenero === g.value ? 'Gerando...' : '▶ Testar'}
-              </button>
+      <div className="voice-tester__grid">
+        {GENEROS_NARRADOR.map((g) => {
+          const isMasc = g.value === 'masculino'
+          const voz = isMasc ? vozMasculina : vozFeminina
+          const audioRef = isMasc ? audioRefMasculino : audioRefFeminino
+          return (
+            <div key={g.value} className="voice-card">
+              <div className="voice-card__header">
+                <span className="voice-card__avatar">{isMasc ? '👨' : '👩'}</span>
+                <div>
+                  <h4 className="voice-card__title">Narrador {isMasc ? 'Masculino' : 'Feminino'}</h4>
+                  <span className="voice-card__sub">Voz padrão selecionada</span>
+                </div>
+              </div>
+
+              <label className="form-field">
+                Voz Neural PT-BR
+                <select value={voz} onChange={(e) => handleVozChange(g.value, e.target.value)}>
+                  {VOZES_TTS.map((v) => (
+                    <option key={v.name} value={v.name}>
+                      {v.name.replace('pt-BR-Chirp3-HD-', '')} ({v.genero})
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <div className="voice-card__actions">
+                <button
+                  type="button"
+                  className="btn btn--primary btn--sm"
+                  onClick={() => testar(g.value, voz)}
+                  disabled={testandoGenero === g.value}
+                >
+                  {testandoGenero === g.value ? 'Gerando áudio...' : '▶ Testar dicção'}
+                </button>
+              </div>
+
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              <audio ref={audioRef} controls className="audio-player voice-tester__player" />
             </div>
-            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-            <audio ref={audioRef} controls className="audio-player voice-tester__player" />
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }

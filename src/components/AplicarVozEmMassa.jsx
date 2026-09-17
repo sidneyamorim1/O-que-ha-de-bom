@@ -67,24 +67,34 @@ export default function AplicarVozEmMassa({ titulo, tabela }) {
   }
 
   return (
-    <div className="voice-tester__lote">
-      <p className="form-titulo" style={{ fontSize: 15, margin: '0 0 4px' }}>
-        {titulo}
+    <div className="admin-batch-card">
+      <div className="admin-batch-card__header">
+        <h4 className="admin-batch-card__title">{titulo}</h4>
+        <span className="admin-batch-card__badge">Ação em lote</span>
+      </div>
+      <p className="admin-batch-card__desc">
+        Gera novamente os arquivos de áudio para todas as histórias desta tabela que possuem o gênero configurado.
       </p>
-      <div className="voice-tester__acoes">
-        {GENEROS_NARRADOR.map((g) => (
-          <button
-            key={g.value}
-            type="button"
-            className="btn btn--primary"
-            onClick={() => handleAplicar(g.value)}
-            disabled={aplicandoGenero !== null}
-          >
-            {aplicandoGenero === g.value
-              ? `Aplicando... (${progresso?.done ?? 0}/${progresso?.total ?? 0})`
-              : `🔁 Regenerar voz ${g.value === 'masculino' ? 'masculina' : 'feminina'}`}
-          </button>
-        ))}
+      <div className="admin-batch-card__actions">
+        {GENEROS_NARRADOR.map((g) => {
+          const isMasc = g.value === 'masculino'
+          return (
+            <button
+              key={g.value}
+              type="button"
+              className="btn btn--secundario btn--batch"
+              onClick={() => handleAplicar(g.value)}
+              disabled={aplicandoGenero !== null}
+            >
+              <span className="btn-icon">{isMasc ? '👨' : '👩'}</span>
+              <span>
+                {aplicandoGenero === g.value
+                  ? `Processando... (${progresso?.done ?? 0}/${progresso?.total ?? 0})`
+                  : `Regenerar voz ${isMasc ? 'masculina' : 'feminina'}`}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )

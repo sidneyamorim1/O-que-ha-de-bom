@@ -1,51 +1,53 @@
-import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabaseClient'
 import VoiceTester from '../components/VoiceTester'
 import AplicarVozEmMassa from '../components/AplicarVozEmMassa'
+import AdminNav from '../components/AdminNav'
 
 export default function AdminVozes() {
-  const navigate = useNavigate()
-
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/admin/login')
-  }
-
   return (
     <div className="page page--admin">
-      <div className="card card--admin card--wide">
-        <div className="admin-header">
-          <h1 className="titulo titulo--sm">Admin — Vozes</h1>
-          <div className="form-actions">
-            <button type="button" className="btn" onClick={() => navigate('/admin')}>
-              Histórias alunos
-            </button>
-            <button type="button" className="btn" onClick={() => navigate('/admin/professores')}>
-              Histórias professores
-            </button>
-            <button type="button" className="btn" onClick={() => navigate('/admin/importacao')}>
-              Importação em lote
-            </button>
-            <button type="button" className="btn" onClick={() => navigate('/admin/usuarios')}>
-              Usuários
-            </button>
-            <button type="button" className="btn" onClick={handleLogout}>
-              Sair
-            </button>
+      <div className="admin-container">
+        <header className="admin-topbar">
+          <div className="admin-brand">
+            <span className="admin-brand__badge">PAINEL DO MESTRE</span>
+            <h1 className="admin-brand__title">🎲 O que há de BOM?</h1>
+          </div>
+          <AdminNav />
+        </header>
+
+        <div className="admin-page-header">
+          <div>
+            <span className="admin-tag-categoria admin-tag-categoria--voices">Síntese de Voz (TTS)</span>
+            <h2 className="admin-section-title">Vozes e Narração Automática</h2>
+            <p className="admin-section-desc">
+              Configure as vozes neurais padrão do Google Cloud TTS para narradores femininos e masculinos,
+              teste em tempo real e aplique narração em lote para histórias existentes.
+            </p>
           </div>
         </div>
 
-        <VoiceTester />
+        <div className="admin-glass-panel">
+          <VoiceTester />
+        </div>
 
-        <hr className="divisor" />
+        <div className="admin-page-header" style={{ marginTop: '32px' }}>
+          <div>
+            <span className="admin-tag-categoria admin-tag-categoria--batch">Processamento em Lote</span>
+            <h2 className="admin-section-title" style={{ fontSize: '20px' }}>Regeneração de Áudios em Massa</h2>
+            <p className="admin-section-desc">
+              Regenera com 1 clique todas as histórias que possuem gênero de narrador configurado,
+              utilizando as vozes selecionadas acima. Histórias com arquivos MP3 manuais permanecem protegidas.
+            </p>
+          </div>
+        </div>
 
-        <h2 className="form-titulo">Aplicar em massa</h2>
-        <p className="form-hint">
-          Regenera o áudio de histórias já cadastradas com a voz padrão atual de cada gênero (definida
-          acima). Não mexe em histórias que não têm gênero de voz definido.
-        </p>
-        <AplicarVozEmMassa titulo="Histórias de alunos" tabela="historias" />
-        <AplicarVozEmMassa titulo="Histórias de professores" tabela="historias_professores" />
+        <div className="admin-batch-grid">
+          <div className="admin-glass-panel">
+            <AplicarVozEmMassa titulo="Histórias dos Alunos" tabela="historias" />
+          </div>
+          <div className="admin-glass-panel">
+            <AplicarVozEmMassa titulo="Histórias dos Professores" tabela="historias_professores" />
+          </div>
+        </div>
       </div>
     </div>
   )

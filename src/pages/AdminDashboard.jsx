@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '../lib/supabaseClient'
 import {
   CORES,
@@ -12,6 +11,7 @@ import {
 } from '../constants/gameData'
 import { AUDIO_BUCKET, IMAGEM_BUCKET, removeStorageFile, gerarAudioIA } from '../lib/storage'
 import AudioPlayer from '../components/AudioPlayer'
+import AdminNav from '../components/AdminNav'
 import { limparCacheHistorias } from '../lib/historias'
 
 const EMPTY_FORM = {
@@ -30,13 +30,14 @@ const EMPTY_FORM = {
 }
 
 export default function AdminDashboard() {
-  const navigate = useNavigate()
   const [historias, setHistorias] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filtroFaixa, setFiltroFaixa] = useState('')
   const [filtroCor, setFiltroCor] = useState('')
+  const [busca, setBusca] = useState('')
   const [form, setForm] = useState(EMPTY_FORM)
+  const [drawerAberto, setDrawerAberto] = useState(false)
   const [saving, setSaving] = useState(false)
   const [excluindo, setExcluindo] = useState(null)
 
@@ -60,9 +61,29 @@ export default function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtroFaixa, filtroCor])
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    navigate('/admin/login')
+  // Métricas rápidas
+  const metricas = useMemo(() => {
+    const total = historias.length
+    const comAudio = historias.filter((h) => !!h.audio_url).length
+    const comImagem = historias.filter((h) => !!h.imagem_url).length
+    const audioManual = historias.filter((h) => h.audio_manual).length
+    return { total, comAudio, comImagem, audioManual }
+  }, [historias])
+
+  // Filtro de busca textual
+  const historiasFiltradas = useMemo(() => {
+    if (!busca.trim()) return historias
+    const termo = busca.toLowerCase()
+    return historias.filter(
+      (h) =>
+        (h.titulo && h.titulo.toLowerCase().includes(termo)) ||
+        (h.texto && h.texto.toLowerCase().includes(termo))
+    )
+  }, [historias, busca])
+
+  function handleAbrirNovo() {
+    setForm(EMPTY_FORM)
+    setDrawerAberto(true)
   }
 
   function handleEditar(historia) {
@@ -80,11 +101,22 @@ export default function AdminDashboard() {
       imagemFile: null,
       removeImagem: false,
     })
+    setDrawerAberto(true)
   }
 
-  function handleCancelarEdicao() {
+  function handleFecharDrawer() {
+    if (saving) return
+    setDrawerAberto(false)
     setForm(EMPTY_FORM)
   }
+
+  function limparFiltros() {
+    setFiltroFaixa('')
+    setFiltroCor('')
+    setBusca('')
+  }
+
+  const temFiltrosAtivos = !!filtroFaixa || !!filtroCor || !!busca
 
   async function confirmarExclusao() {
     if (!excluindo) return
@@ -110,8 +142,6 @@ export default function AdminDashboard() {
     const enviouMp3Agora = !!form.audioFile
     let gerouAutomaticamente = false
 
-    // Sem MP3 manual nem removeAudio explícito: gera a narração automaticamente com a voz
-    // padrão configurada, em vez de deixar sem áudio.
     if (!audioFile && !form.removeAudio && !audioUrl) {
       try {
         audioFile = await gerarAudioIA(form.texto, getVozPreferida(form.genero_narrador))
@@ -167,9 +197,6 @@ export default function AdminDashboard() {
       imagem_url: imagemUrl,
     }
 
-    // Só grava audio_manual quando o áudio realmente mudou nessa submissão — assim, editar uma
-    // história sem mexer no áudio não apaga a marcação que ela já tinha. Em história nova
-    // (sem id), sempre grava, já que a coluna não aceita nulo.
     if (!form.id || enviouMp3Agora || form.removeAudio || gerouAutomaticamente) {
       payload.audio_manual = enviouMp3Agora
     }
@@ -187,7 +214,6 @@ export default function AdminDashboard() {
 
     limparCacheHistorias()
 
-    // Se trocou ou removeu o áudio/imagem antigos, limpa o arquivo anterior do storage
     const trocouAudio = form.audioFile || form.removeAudio
     if (trocouAudio && form.audioUrl && form.audioUrl !== audioUrl) {
       await removeStorageFile(form.audioUrl, AUDIO_BUCKET)
@@ -197,265 +223,516 @@ export default function AdminDashboard() {
       await removeStorageFile(form.imagemUrl, IMAGEM_BUCKET)
     }
 
+    setDrawerAberto(false)
     setForm(EMPTY_FORM)
     carregar()
   }
 
-  const formulario = (
-    <form className="form form--grid" onSubmit={handleSubmit}>
-          <h2 className="form-titulo">{form.id ? 'Editar história' : 'Nova história'}</h2>
-          <label className="form-field">
-            Faixa etária
-            <select
-              value={form.faixa_etaria}
-              onChange={(e) => setForm((f) => ({ ...f, faixa_etaria: e.target.value }))}
-            >
-              {FAIXAS_ETARIAS.map((f) => (
-                <option key={f.value} value={f.value}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="form-field">
-            Cor
-            <select value={form.cor} onChange={(e) => setForm((f) => ({ ...f, cor: e.target.value }))}>
-              {CORES.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="form-field form-field--full">
-            Título (opcional)
+  return (
+    <div className="page page--admin">
+      <div className="admin-container">
+        {/* Topbar moderna com navegação */}
+        <header className="admin-topbar">
+          <div className="admin-brand">
+            <span className="admin-brand__badge">PAINEL DO MESTRE</span>
+            <h1 className="admin-brand__title">🎲 O que há de BOM?</h1>
+          </div>
+          <AdminNav />
+        </header>
+
+        {/* Cabeçalho da página com título e ação primária */}
+        <div className="admin-page-header">
+          <div>
+            <span className="admin-tag-categoria">Módulo Alunos</span>
+            <h2 className="admin-section-title">Histórias dos Alunos</h2>
+            <p className="admin-section-desc">
+              Gerencie os desafios, narrativas e áudios que os alunos exploram no tabuleiro.
+            </p>
+          </div>
+          <button type="button" className="btn btn--primary btn--novo" onClick={handleAbrirNovo}>
+            <span className="btn-icon">➕</span> Nova história
+          </button>
+        </div>
+
+        {/* Cards de Métricas / KPIs */}
+        <div className="admin-kpi-grid">
+          <div className="admin-kpi-card">
+            <div className="admin-kpi-card__icon admin-kpi-card__icon--blue">📚</div>
+            <div className="admin-kpi-card__info">
+              <span className="admin-kpi-card__value">{metricas.total}</span>
+              <span className="admin-kpi-card__label">Total cadastradas</span>
+            </div>
+          </div>
+          <div className="admin-kpi-card">
+            <div className="admin-kpi-card__icon admin-kpi-card__icon--teal">🎙️</div>
+            <div className="admin-kpi-card__info">
+              <span className="admin-kpi-card__value">
+                {metricas.comAudio}{' '}
+                <small className="admin-kpi-card__sub">
+                  ({metricas.total > 0 ? Math.round((metricas.comAudio / metricas.total) * 100) : 0}%)
+                </small>
+              </span>
+              <span className="admin-kpi-card__label">Com narração em áudio</span>
+            </div>
+          </div>
+          <div className="admin-kpi-card">
+            <div className="admin-kpi-card__icon admin-kpi-card__icon--amber">🖼️</div>
+            <div className="admin-kpi-card__info">
+              <span className="admin-kpi-card__value">{metricas.comImagem}</span>
+              <span className="admin-kpi-card__label">Com ilustração</span>
+            </div>
+          </div>
+          <div className="admin-kpi-card">
+            <div className="admin-kpi-card__icon admin-kpi-card__icon--purple">🎵</div>
+            <div className="admin-kpi-card__info">
+              <span className="admin-kpi-card__value">{metricas.audioManual}</span>
+              <span className="admin-kpi-card__label">Áudios personalizados</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Barra de Filtros e Busca */}
+        <div className="admin-toolbar">
+          <div className="admin-search-wrapper">
+            <span className="admin-search-icon">🔍</span>
             <input
               type="text"
-              value={form.titulo}
-              onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
+              placeholder="Buscar por título ou trecho da história..."
+              value={busca}
+              onChange={(e) => setBusca(e.target.value)}
+              className="admin-search-input"
             />
-          </label>
-          <label className="form-field form-field--full">
-            Texto da história
-            <textarea
-              value={form.texto}
-              onChange={(e) => setForm((f) => ({ ...f, texto: e.target.value }))}
-              rows={5}
-              required
-            />
-          </label>
-          <p className="form-hint form-field--full">
-            O texto acima é sempre exibido. Se você não enviar um MP3, a narração é gerada automaticamente
-            ao salvar com a voz padrão do gênero escolhido abaixo — só cai no leitor de voz do navegador se
-            essa geração falhar.
-          </p>
-          <label className="form-field form-field--full">
-            Gênero da voz
-            <select
-              value={form.genero_narrador}
-              onChange={(e) => setForm((f) => ({ ...f, genero_narrador: e.target.value }))}
-            >
-              <option value="">Não definido</option>
-              {GENEROS_NARRADOR.map((g) => (
-                <option key={g.value} value={g.value}>
-                  {g.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="form-field form-field--full">
-            Áudio MP3 (opcional)
-            <input
-              type="file"
-              accept="audio/mpeg,audio/mp3,.mp3"
-              onChange={(e) =>
-                setForm((f) => ({ ...f, audioFile: e.target.files?.[0] ?? null, removeAudio: false }))
-              }
-            />
-          </label>
-          {form.audioFile && (
-            <p className="form-hint form-field--full">Novo arquivo selecionado: {form.audioFile.name}</p>
-          )}
-          {!form.audioFile && form.audioUrl && !form.removeAudio && (
-            <div className="form-field--full audio-atual">
-              <span>Áudio atual:</span>
-              <AudioPlayer src={form.audioUrl} />
+            {busca && (
               <button
                 type="button"
-                className="btn btn--perigo"
-                onClick={() => setForm((f) => ({ ...f, removeAudio: true }))}
+                className="admin-search-clear"
+                onClick={() => setBusca('')}
+                title="Limpar busca"
               >
-                Remover áudio
-              </button>
-            </div>
-          )}
-          {form.removeAudio && (
-            <p className="form-hint form-field--full">O áudio será removido ao salvar.</p>
-          )}
-          <label className="form-field form-field--full">
-            Imagem (opcional)
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) =>
-                setForm((f) => ({ ...f, imagemFile: e.target.files?.[0] ?? null, removeImagem: false }))
-              }
-            />
-          </label>
-          {form.imagemFile && (
-            <p className="form-hint form-field--full">Novo arquivo selecionado: {form.imagemFile.name}</p>
-          )}
-          {!form.imagemFile && form.imagemUrl && !form.removeImagem && (
-            <div className="form-field--full imagem-atual">
-              <img src={form.imagemUrl} alt="Imagem atual da história" className="imagem-preview" />
-              <button
-                type="button"
-                className="btn btn--perigo"
-                onClick={() => setForm((f) => ({ ...f, removeImagem: true }))}
-              >
-                Remover imagem
-              </button>
-            </div>
-          )}
-          {form.removeImagem && (
-            <p className="form-hint form-field--full">A imagem será removida ao salvar.</p>
-          )}
-          <div className="form-field--full form-actions">
-            <button type="submit" className="btn btn--primary" disabled={saving}>
-              {saving ? 'Salvando...' : form.id ? 'Salvar alterações' : 'Adicionar história'}
-            </button>
-            {form.id && (
-              <button type="button" className="btn" onClick={handleCancelarEdicao}>
-                Cancelar edição
+                ✕
               </button>
             )}
           </div>
-        </form>
-  )
 
-  return (
-    <div className="page page--admin">
-      <div className="card card--admin card--wide">
-        <div className="admin-header">
-          <h1 className="titulo titulo--sm">Admin — O que há de BOM?</h1>
-          <div className="form-actions">
-            <button type="button" className="btn" onClick={() => navigate('/admin/professores')}>
-              Histórias professores
-            </button>
-            <button type="button" className="btn" onClick={() => navigate('/admin/vozes')}>
-              Vozes
-            </button>
-            <button type="button" className="btn" onClick={() => navigate('/admin/importacao')}>
-              Importação em lote
-            </button>
-            <button type="button" className="btn" onClick={() => navigate('/admin/usuarios')}>
-              Usuários
-            </button>
-            <button type="button" className="btn" onClick={handleLogout}>
-              Sair
-            </button>
-          </div>
-        </div>
-
-        {!form.id && formulario}
-
-        <hr className="divisor" />
-
-        <div className="admin-filtros">
-          <label className="form-field">
-            Filtrar por idade
-            <select value={filtroFaixa} onChange={(e) => setFiltroFaixa(e.target.value)}>
-              <option value="">Todas</option>
+          <div className="admin-filter-group">
+            <select
+              value={filtroFaixa}
+              onChange={(e) => setFiltroFaixa(e.target.value)}
+              className="admin-select"
+            >
+              <option value="">Todas as idades</option>
               {FAIXAS_ETARIAS.map((f) => (
                 <option key={f.value} value={f.value}>
-                  {f.label}
+                  {f.emoji} {f.label} anos
                 </option>
               ))}
             </select>
-          </label>
-          <label className="form-field">
-            Filtrar por cor
-            <select value={filtroCor} onChange={(e) => setFiltroCor(e.target.value)}>
-              <option value="">Todas</option>
+
+            <select
+              value={filtroCor}
+              onChange={(e) => setFiltroCor(e.target.value)}
+              className="admin-select"
+            >
+              <option value="">Todas as cores</option>
               {CORES.map((c) => (
                 <option key={c.value} value={c.value}>
                   {c.label}
                 </option>
               ))}
             </select>
-          </label>
+
+            {temFiltrosAtivos && (
+              <button
+                type="button"
+                className="admin-btn-reset-filters"
+                onClick={limparFiltros}
+                title="Redefinir todos os filtros"
+              >
+                Limpar filtros
+              </button>
+            )}
+          </div>
         </div>
 
-        {loading && <p className="mensagem">Carregando histórias...</p>}
-        {error && <p className="mensagem mensagem--erro">{error}</p>}
+        {/* Informações de resultados */}
+        <div className="admin-results-bar">
+          <span className="admin-results-count">
+            Mostrando <strong>{historiasFiltradas.length}</strong> de {historias.length} história
+            {historias.length === 1 ? '' : 's'}
+          </span>
+        </div>
 
-        {!loading && !error && historias.length === 0 && (
-          <p className="mensagem">Nenhuma história cadastrada com esse filtro.</p>
+        {/* Mensagens de feedback */}
+        {loading && (
+          <div className="admin-empty-state">
+            <div className="spinner" />
+            <p>Carregando histórias...</p>
+          </div>
         )}
 
-        <ul className="lista-historias">
-          {historias.map((h) => {
+        {error && (
+          <div className="admin-alert admin-alert--erro">
+            <span>⚠️</span>
+            <p>{error}</p>
+          </div>
+        )}
+
+        {!loading && !error && historiasFiltradas.length === 0 && (
+          <div className="admin-empty-state">
+            <span className="admin-empty-state__icon">📭</span>
+            <h3 className="admin-empty-state__title">Nenhuma história encontrada</h3>
+            <p className="admin-empty-state__desc">
+              {temFiltrosAtivos
+                ? 'Tente remover os filtros ou buscar por outro termo.'
+                : 'Comece adicionando a primeira história para os alunos.'}
+            </p>
+            {temFiltrosAtivos ? (
+              <button type="button" className="btn btn--secundario" onClick={limparFiltros}>
+                Limpar filtros
+              </button>
+            ) : (
+              <button type="button" className="btn btn--primary" onClick={handleAbrirNovo}>
+                ➕ Cadastrar primeira história
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Listagem de Cards de Histórias Modernos */}
+        <div className="admin-stories-grid">
+          {historiasFiltradas.map((h) => {
             const cor = corInfo(h.cor)
 
-            if (form.id === h.id) {
-              return (
-                <li key={h.id} className="lista-historias__item lista-historias__item--editando">
-                  {formulario}
-                </li>
-              )
-            }
-
             return (
-              <li key={h.id} className="lista-historias__item">
-                <div className="lista-historias__cor" style={{ backgroundColor: cor?.hex }} />
-                <div className="lista-historias__conteudo">
-                  <p className="lista-historias__meta">
-                    {labelFaixaEtaria(h.faixa_etaria)} anos · {cor?.label}
-                    {h.genero_narrador && ` · voz ${labelGeneroNarrador(h.genero_narrador).toLowerCase()}`}
-                  </p>
-                  {h.titulo && <p className="lista-historias__titulo">{h.titulo}</p>}
-                  <p className="lista-historias__texto">{h.texto}</p>
-                  {h.audio_url && (
-                    <p className="lista-historias__meta lista-historias__meta--audio">
-                      🎵 {h.audio_manual ? 'MP3 manual' : 'narração automática'}
-                    </p>
-                  )}
-                  {h.imagem_url && (
-                    <p className="lista-historias__meta lista-historias__meta--audio">🖼️ tem imagem</p>
+              <article key={h.id} className="admin-story-card">
+                {/* Borda temática com a cor do tabuleiro */}
+                <div
+                  className="admin-story-card__color-stripe"
+                  style={{ backgroundColor: cor?.hex || '#ccc' }}
+                  title={`Cor: ${cor?.label}`}
+                />
+
+                <div className="admin-story-card__body">
+                  {/* Badges e metadados */}
+                  <div className="admin-story-card__header">
+                    <div className="admin-story-card__tags">
+                      <span className="admin-badge admin-badge--faixa">
+                        🧒 {labelFaixaEtaria(h.faixa_etaria)} anos
+                      </span>
+                      <span
+                        className="admin-badge admin-badge--cor"
+                        style={{ '--cor-tema': cor?.hex || '#999' }}
+                      >
+                        <span
+                          className="admin-badge-dot"
+                          style={{ backgroundColor: cor?.hex || '#999' }}
+                        />
+                        {cor?.label}
+                      </span>
+                      {h.genero_narrador && (
+                        <span className="admin-badge admin-badge--voz">
+                          🎙️ Voz {labelGeneroNarrador(h.genero_narrador)}
+                        </span>
+                      )}
+                      {h.audio_url && (
+                        <span
+                          className={`admin-badge ${
+                            h.audio_manual ? 'admin-badge--audio-manual' : 'admin-badge--audio-auto'
+                          }`}
+                        >
+                          {h.audio_manual ? '🎵 MP3 Próprio' : '✨ Narração IA'}
+                        </span>
+                      )}
+                      {h.imagem_url && (
+                        <span className="admin-badge admin-badge--imagem">🖼️ Imagem</span>
+                      )}
+                    </div>
+
+                    <div className="admin-story-card__actions">
+                      <button
+                        type="button"
+                        className="admin-action-btn admin-action-btn--edit"
+                        onClick={() => handleEditar(h)}
+                        title="Editar história"
+                      >
+                        ✏️ Editar
+                      </button>
+                      <button
+                        type="button"
+                        className="admin-action-btn admin-action-btn--delete"
+                        onClick={() => setExcluindo(h)}
+                        title="Excluir história"
+                      >
+                        🗑️ Excluir
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Título e Texto */}
+                  {h.titulo && <h3 className="admin-story-card__title">{h.titulo}</h3>}
+                  <p className="admin-story-card__text">{h.texto}</p>
+
+                  {/* Player de áudio direto e miniatura de imagem */}
+                  {(h.audio_url || h.imagem_url) && (
+                    <div className="admin-story-card__media">
+                      {h.audio_url && (
+                        <div className="admin-story-card__audio-box">
+                          <audio
+                            controls
+                            src={h.audio_url}
+                            className="admin-story-card__player"
+                            preload="none"
+                          />
+                        </div>
+                      )}
+                      {h.imagem_url && (
+                        <a
+                          href={h.imagem_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="admin-story-card__thumb-link"
+                          title="Clique para abrir imagem original"
+                        >
+                          <img
+                            src={h.imagem_url}
+                            alt={h.titulo || 'Ilustração da história'}
+                            className="admin-story-card__thumb"
+                          />
+                        </a>
+                      )}
+                    </div>
                   )}
                 </div>
-                <div className="lista-historias__acoes">
-                  <button type="button" className="btn" onClick={() => handleEditar(h)}>
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn--perigo"
-                    onClick={() => setExcluindo(h)}
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </li>
+              </article>
             )
           })}
-        </ul>
+        </div>
       </div>
 
+      {/* DRAWER LATERAL: Criar / Editar História */}
+      {drawerAberto && (
+        <div className="admin-drawer-overlay" onClick={handleFecharDrawer}>
+          <div className="admin-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="admin-drawer__header">
+              <div>
+                <span className="admin-drawer__badge">
+                  {form.id ? 'Modo de Edição' : 'Novo Registro'}
+                </span>
+                <h2 className="admin-drawer__title">
+                  {form.id ? 'Editar história' : 'Nova história de aluno'}
+                </h2>
+              </div>
+              <button
+                type="button"
+                className="admin-drawer__close"
+                onClick={handleFecharDrawer}
+                disabled={saving}
+              >
+                ✕
+              </button>
+            </div>
+
+            <form className="admin-drawer__form" onSubmit={handleSubmit}>
+              <div className="form-grid-2">
+                <label className="form-field">
+                  Faixa etária
+                  <select
+                    value={form.faixa_etaria}
+                    onChange={(e) => setForm((f) => ({ ...f, faixa_etaria: e.target.value }))}
+                  >
+                    {FAIXAS_ETARIAS.map((f) => (
+                      <option key={f.value} value={f.value}>
+                        {f.emoji} {f.label} anos
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="form-field">
+                  Cor temática
+                  <select
+                    value={form.cor}
+                    onChange={(e) => setForm((f) => ({ ...f, cor: e.target.value }))}
+                  >
+                    {CORES.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <label className="form-field">
+                Título (opcional)
+                <input
+                  type="text"
+                  placeholder="Ex: O Mistério da Árvore Velha"
+                  value={form.titulo}
+                  onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
+                />
+              </label>
+
+              <label className="form-field">
+                <div className="form-field__header">
+                  <span>Texto da história</span>
+                  <span className="form-field__count">{form.texto.length} caracteres</span>
+                </div>
+                <textarea
+                  value={form.texto}
+                  onChange={(e) => setForm((f) => ({ ...f, texto: e.target.value }))}
+                  rows={6}
+                  placeholder="Digite aqui o texto que será narrado e exibido na carta do jogo..."
+                  required
+                />
+              </label>
+
+              <div className="admin-form-section">
+                <h4 className="admin-form-section__title">🎙️ Narração e Voz</h4>
+                <label className="form-field">
+                  Gênero da voz padrão
+                  <select
+                    value={form.genero_narrador}
+                    onChange={(e) => setForm((f) => ({ ...f, genero_narrador: e.target.value }))}
+                  >
+                    <option value="">Não definido (ou leitor do navegador)</option>
+                    {GENEROS_NARRADOR.map((g) => (
+                      <option key={g.value} value={g.value}>
+                        {g.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <p className="form-hint">
+                  Se você não enviar um MP3 manual, o áudio em português será gerado automaticamente
+                  ao salvar via inteligência artificial (Google Cloud Chirp3-HD).
+                </p>
+
+                <label className="admin-file-dropzone">
+                  <span className="admin-file-icon">🎵</span>
+                  <span className="admin-file-text">
+                    {form.audioFile
+                      ? `Arquivo selecionado: ${form.audioFile.name}`
+                      : 'Clique para enviar arquivo MP3 manual'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="audio/mpeg,audio/mp3,.mp3"
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        audioFile: e.target.files?.[0] ?? null,
+                        removeAudio: false,
+                      }))
+                    }
+                    className="admin-file-hidden"
+                  />
+                </label>
+
+                {!form.audioFile && form.audioUrl && !form.removeAudio && (
+                  <div className="admin-media-preview">
+                    <span>Áudio atual:</span>
+                    <AudioPlayer src={form.audioUrl} />
+                    <button
+                      type="button"
+                      className="btn btn--perigo btn--sm"
+                      onClick={() => setForm((f) => ({ ...f, removeAudio: true }))}
+                    >
+                      Remover áudio
+                    </button>
+                  </div>
+                )}
+
+                {form.removeAudio && (
+                  <p className="admin-alert-note">O áudio cadastrado será removido ao salvar.</p>
+                )}
+              </div>
+
+              <div className="admin-form-section">
+                <h4 className="admin-form-section__title">🖼️ Ilustração</h4>
+                <label className="admin-file-dropzone">
+                  <span className="admin-file-icon">📷</span>
+                  <span className="admin-file-text">
+                    {form.imagemFile
+                      ? `Arquivo selecionado: ${form.imagemFile.name}`
+                      : 'Clique para enviar imagem (JPG, PNG, WebP)'}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        imagemFile: e.target.files?.[0] ?? null,
+                        removeImagem: false,
+                      }))
+                    }
+                    className="admin-file-hidden"
+                  />
+                </label>
+
+                {!form.imagemFile && form.imagemUrl && !form.removeImagem && (
+                  <div className="admin-media-preview">
+                    <img
+                      src={form.imagemUrl}
+                      alt="Preview da história"
+                      className="admin-preview-img"
+                    />
+                    <button
+                      type="button"
+                      className="btn btn--perigo btn--sm"
+                      onClick={() => setForm((f) => ({ ...f, removeImagem: true }))}
+                    >
+                      Remover imagem
+                    </button>
+                  </div>
+                )}
+
+                {form.removeImagem && (
+                  <p className="admin-alert-note">A imagem cadastrada será removida ao salvar.</p>
+                )}
+              </div>
+
+              <div className="admin-drawer__footer">
+                <button
+                  type="button"
+                  className="btn btn--secundario"
+                  onClick={handleFecharDrawer}
+                  disabled={saving}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn--primary" disabled={saving}>
+                  {saving ? 'Salvando história...' : form.id ? 'Salvar alterações' : 'Criar história'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
       {excluindo && (
         <div className="modal-overlay" onClick={() => setExcluindo(null)}>
           <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-icon">🗑️</div>
             <h2 className="modal-titulo">Excluir história?</h2>
             <p className="modal-texto">
-              {excluindo.titulo ? `"${excluindo.titulo}"` : 'Esta história'} será excluída para sempre, junto
-              com o áudio e a imagem cadastrados. Essa ação não pode ser desfeita.
+              {excluindo.titulo ? `"${excluindo.titulo}"` : 'Esta história'} será excluída
+              permanentemente, incluindo os arquivos de áudio e imagem vinculados. Esta ação não
+              pode ser desfeita.
             </p>
             <div className="modal-acoes">
-              <button type="button" className="btn" onClick={() => setExcluindo(null)}>
+              <button type="button" className="btn btn--secundario" onClick={() => setExcluindo(null)}>
                 Cancelar
               </button>
-              <button type="button" className="btn btn--primary btn--perigo-solido" onClick={confirmarExclusao}>
-                Excluir
+              <button
+                type="button"
+                className="btn btn--primary btn--perigo-solido"
+                onClick={confirmarExclusao}
+              >
+                Sim, excluir
               </button>
             </div>
           </div>

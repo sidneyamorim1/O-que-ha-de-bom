@@ -100,22 +100,21 @@ export default function ImportarCsv({ titulo, tabela, colunaFaixa, faixasValidas
   }
 
   return (
-    <div className="voice-tester__lote">
-      <p className="form-titulo" style={{ fontSize: 15, margin: '0 0 4px' }}>
-        {titulo}
-      </p>
+    <div className="admin-import-box">
+      {titulo && <h4 className="admin-import-box__title">{titulo}</h4>}
       <p className="form-hint">
-        Colunas (primeira linha = cabeçalho): <code>{colunaFaixa}</code>, <code>cor</code>,{' '}
-        <code>titulo</code> (opcional), <code>texto</code>, <code>genero_narrador</code> (opcional:
-        feminino/masculino). Não gera áudio na hora — depois de importar, use "Aplicar em massa" na aba
-        Vozes pra narrar todas de uma vez.
+        Colunas esperadas: <code>{colunaFaixa}</code>, <code>cor</code>, <code>titulo</code> (opcional),{' '}
+        <code>texto</code>, <code>genero_narrador</code> (opcional: feminino/masculino).
       </p>
-      <div className="voice-tester__acoes">
-        <button type="button" className="btn" onClick={handleBaixarModelo}>
-          ⬇️ Baixar modelo CSV
+
+      <div className="admin-import-actions">
+        <button type="button" className="btn btn--secundario" onClick={handleBaixarModelo}>
+          <span className="btn-icon">⬇️</span> Baixar planilha modelo
         </button>
-        <label className="btn" style={{ margin: 0 }}>
-          {importando ? 'Importando...' : 'Escolher arquivo CSV'}
+
+        <label className="btn btn--primary" style={{ margin: 0 }}>
+          <span className="btn-icon">📂</span>
+          <span>{importando ? 'Processando dados...' : 'Selecionar CSV preenchido'}</span>
           <input
             type="file"
             accept=".csv,text/csv"
@@ -125,7 +124,8 @@ export default function ImportarCsv({ titulo, tabela, colunaFaixa, faixasValidas
           />
         </label>
       </div>
-      {resultado && <p className="mensagem">{resultado}</p>}
+
+      {resultado && <div className="admin-alert admin-alert--sucesso">{resultado}</div>}
     </div>
   )
 }

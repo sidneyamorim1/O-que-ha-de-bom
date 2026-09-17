@@ -103,20 +103,24 @@ export default function ImportarUsuariosCsv({ onImportado }) {
   }
 
   return (
-    <div className="voice-tester__lote">
-      <p className="form-titulo" style={{ fontSize: 15, margin: '0 0 4px' }}>
-        Usuários
-      </p>
+    <div className="admin-import-box">
       <p className="form-hint">
-        Colunas (primeira linha = cabeçalho): <code>nome</code> (opcional), <code>email</code>,{' '}
-        <code>senha</code> (mín. 6 caracteres), <code>papel</code> (admin, professor ou aluno).
+        Colunas esperadas: <code>nome</code> (opcional), <code>email</code>, <code>senha</code> (mín. 6
+        caracteres), <code>papel</code> (admin, professor ou aluno).
       </p>
-      <div className="voice-tester__acoes">
-        <button type="button" className="btn" onClick={handleBaixarModelo}>
-          ⬇️ Baixar modelo CSV
+
+      <div className="admin-import-actions">
+        <button type="button" className="btn btn--secundario" onClick={handleBaixarModelo}>
+          <span className="btn-icon">⬇️</span> Baixar modelo CSV
         </button>
-        <label className="btn" style={{ margin: 0 }}>
-          {importando ? `Criando... (${progresso?.done ?? 0}/${progresso?.total ?? 0})` : 'Escolher arquivo CSV'}
+
+        <label className="btn btn--primary" style={{ margin: 0 }}>
+          <span className="btn-icon">👥</span>
+          <span>
+            {importando
+              ? `Criando usuários (${progresso?.done ?? 0}/${progresso?.total ?? 0})...`
+              : 'Selecionar CSV de usuários'}
+          </span>
           <input
             type="file"
             accept=".csv,text/csv"
@@ -126,7 +130,12 @@ export default function ImportarUsuariosCsv({ onImportado }) {
           />
         </label>
       </div>
-      {resultado && <p className="mensagem" style={{ whiteSpace: 'pre-wrap' }}>{resultado}</p>}
+
+      {resultado && (
+        <div className="admin-alert admin-alert--sucesso" style={{ whiteSpace: 'pre-wrap' }}>
+          {resultado}
+        </div>
+      )}
     </div>
   )
 }
