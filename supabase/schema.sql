@@ -17,6 +17,13 @@ create table if not exists public.historias (
 -- Se a tabela já existia (de uma versão anterior deste schema), garante as colunas novas:
 alter table public.historias add column if not exists audio_url text;
 alter table public.historias add column if not exists imagem_url text;
+alter table public.historias add column if not exists genero_narrador text;
+alter table public.historias drop constraint if exists historias_genero_narrador_check;
+alter table public.historias add constraint historias_genero_narrador_check
+  check (genero_narrador is null or genero_narrador in ('feminino', 'masculino'));
+-- true = MP3 enviado manualmente pelo admin (nunca sobrescrito pelo "Aplicar em massa" de vozes);
+-- false = áudio gerado automaticamente pela IA (pode ser regenerado em massa).
+alter table public.historias add column if not exists audio_manual boolean not null default false;
 
 create index if not exists historias_faixa_cor_idx on public.historias (faixa_etaria, cor);
 
@@ -130,8 +137,17 @@ create table if not exists public.historias_professores (
   texto text not null,
   audio_url text,
   imagem_url text,
+  genero_narrador text check (genero_narrador is null or genero_narrador in ('feminino', 'masculino')),
+  audio_manual boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+-- Se a tabela já existia (de uma versão anterior deste schema), garante as colunas novas:
+alter table public.historias_professores add column if not exists genero_narrador text;
+alter table public.historias_professores drop constraint if exists historias_professores_genero_narrador_check;
+alter table public.historias_professores add constraint historias_professores_genero_narrador_check
+  check (genero_narrador is null or genero_narrador in ('feminino', 'masculino'));
+alter table public.historias_professores add column if not exists audio_manual boolean not null default false;
 
 create index if not exists historias_professores_faixa_cor_idx on public.historias_professores (faixa, cor);
 

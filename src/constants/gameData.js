@@ -18,6 +18,11 @@ export const FAIXAS_PROFESSOR = [
   { value: '35-40', label: '35 a 40' },
 ]
 
+export const GENEROS_NARRADOR = [
+  { value: 'feminino', label: 'Feminino' },
+  { value: 'masculino', label: 'Masculino' },
+]
+
 export const CORES = [
   { value: 'azul', label: 'Azul', hex: '#009FE3' },
   { value: 'amarelo', label: 'Amarelo', hex: '#F0D400' },
@@ -41,6 +46,10 @@ export function labelFaixaProfessor(value) {
 
 export function labelPapel(value) {
   return PAPEIS_USUARIO.find((p) => p.value === value)?.label ?? value
+}
+
+export function labelGeneroNarrador(value) {
+  return GENEROS_NARRADOR.find((g) => g.value === value)?.label ?? value
 }
 
 // Vozes Chirp3-HD (Google Cloud Text-to-Speech) em pt-BR — a camada mais realista disponível.
@@ -77,18 +86,19 @@ export const VOZES_TTS = [
   { name: 'pt-BR-Chirp3-HD-Zubenelgenubi', genero: 'Masculina' },
 ]
 
-// Preferência de voz: um padrão geral + opcionalmente uma voz específica por faixa etária,
-// que sobrescreve o padrão só pra aquela faixa. Guardado como { default, faixas: { '10-16': ... } }.
+// Preferência de voz: uma voz padrão pra narrador feminino e outra pra masculino, compartilhadas
+// entre alunos e professores. Guardado como { feminino: '...', masculino: '...' }.
 const VOZES_CONFIG_KEY = 'oQueHaDeBom.vozesTts'
 
 function lerConfigVozes() {
+  const vazio = { feminino: null, masculino: null }
   try {
     const raw = localStorage.getItem(VOZES_CONFIG_KEY)
-    if (!raw) return { default: null, faixas: {} }
+    if (!raw) return vazio
     const parsed = JSON.parse(raw)
-    return { default: parsed.default ?? null, faixas: parsed.faixas ?? {} }
+    return { feminino: parsed.feminino ?? null, masculino: parsed.masculino ?? null }
   } catch {
-    return { default: null, faixas: {} }
+    return vazio
   }
 }
 
@@ -100,32 +110,20 @@ function salvarConfigVozes(config) {
   }
 }
 
-// Voz que será efetivamente usada pra uma faixa etária (ou o padrão geral, se faixaEtaria for omitida).
-export function getVozPreferida(faixaEtaria) {
+const VOZ_FEMININA_PADRAO = VOZES_TTS.find((v) => v.genero === 'Feminina')?.name ?? VOZES_TTS[0].name
+const VOZ_MASCULINA_PADRAO = VOZES_TTS.find((v) => v.genero === 'Masculina')?.name ?? VOZES_TTS[0].name
+
+// Voz configurada pro gênero de narrador informado (feminino/masculino). Sem gênero, cai na
+// voz feminina padrão. Vale igual pra histórias de alunos e de professores.
+export function getVozPreferida(generoNarrador) {
   const config = lerConfigVozes()
-  if (faixaEtaria && config.faixas[faixaEtaria]) return config.faixas[faixaEtaria]
-  return config.default || VOZES_TTS[0].name
+  if (generoNarrador === 'masculino') return config.masculino || VOZ_MASCULINA_PADRAO
+  return config.feminino || VOZ_FEMININA_PADRAO
 }
 
-// Voz específica definida pra uma faixa (sem cair no padrão geral) — null se ela usa o padrão.
-export function getVozEspecificaDaFaixa(faixaEtaria) {
-  return lerConfigVozes().faixas[faixaEtaria] ?? null
-}
-
-// escopo: undefined/'' define o padrão geral; um value de FAIXAS_ETARIAS define só aquela faixa.
-export function setVozPreferida(nomeVoz, escopo) {
+export function setVozPreferida(nomeVoz, generoNarrador) {
   const config = lerConfigVozes()
-  if (escopo) {
-    config.faixas[escopo] = nomeVoz
-  } else {
-    config.default = nomeVoz
-  }
-  salvarConfigVozes(config)
-}
-
-export function limparVozDaFaixa(faixaEtaria) {
-  const config = lerConfigVozes()
-  delete config.faixas[faixaEtaria]
+  config[generoNarrador === 'masculino' ? 'masculino' : 'feminino'] = nomeVoz
   salvarConfigVozes(config)
 }
 

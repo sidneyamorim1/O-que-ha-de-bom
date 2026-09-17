@@ -147,6 +147,12 @@ export default function AdminUsuarios() {
             <button type="button" className="btn" onClick={() => navigate('/admin/professores')}>
               Histórias professores
             </button>
+            <button type="button" className="btn" onClick={() => navigate('/admin/vozes')}>
+              Vozes
+            </button>
+            <button type="button" className="btn" onClick={() => navigate('/admin/importacao')}>
+              Importação em lote
+            </button>
             <button type="button" className="btn" onClick={handleLogout}>
               Sair
             </button>

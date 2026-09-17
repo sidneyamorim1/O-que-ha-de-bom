@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
-import { CORES, FAIXAS_PROFESSOR, corInfo, labelFaixaProfessor, getVozPreferida, labelVoz } from '../constants/gameData'
+import {
+  CORES,
+  FAIXAS_PROFESSOR,
+  GENEROS_NARRADOR,
+  corInfo,
+  labelFaixaProfessor,
+  labelGeneroNarrador,
+  getVozPreferida,
+} from '../constants/gameData'
 import { AUDIO_BUCKET, IMAGEM_BUCKET, removeStorageFile, gerarAudioIA } from '../lib/storage'
 import AudioPlayer from '../components/AudioPlayer'
 
@@ -11,6 +19,7 @@ const EMPTY_FORM = {
   cor: CORES[0].value,
   titulo: '',
   texto: '',
+  genero_narrador: '',
   audioUrl: null,
   audioFile: null,
   removeAudio: false,
@@ -28,35 +37,7 @@ export default function AdminHistoriasProfessores() {
   const [filtroCor, setFiltroCor] = useState('')
   const [form, setForm] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
-  const [gerandoAudioIA, setGerandoAudioIA] = useState(false)
-  const [iaAudioPreviewUrl, setIaAudioPreviewUrl] = useState(null)
   const [excluindo, setExcluindo] = useState(null)
-
-  function limparPreviewIA() {
-    if (iaAudioPreviewUrl) URL.revokeObjectURL(iaAudioPreviewUrl)
-    setIaAudioPreviewUrl(null)
-  }
-
-  async function handleGerarAudioIA() {
-    if (!form.texto.trim()) {
-      window.alert('Escreva o texto da história antes de gerar a narração.')
-      return
-    }
-
-    setGerandoAudioIA(true)
-
-    try {
-      const file = await gerarAudioIA(form.texto, getVozPreferida())
-
-      limparPreviewIA()
-      setIaAudioPreviewUrl(URL.createObjectURL(file))
-      setForm((f) => ({ ...f, audioFile: file, removeAudio: false }))
-    } catch (err) {
-      window.alert('Erro ao gerar narração: ' + err.message)
-    } finally {
-      setGerandoAudioIA(false)
-    }
-  }
 
   async function carregar() {
     setLoading(true)
@@ -84,13 +65,13 @@ export default function AdminHistoriasProfessores() {
   }
 
   function handleEditar(historia) {
-    limparPreviewIA()
     setForm({
       id: historia.id,
       faixa: historia.faixa,
       cor: historia.cor,
       titulo: historia.titulo ?? '',
       texto: historia.texto,
+      genero_narrador: historia.genero_narrador ?? '',
       audioUrl: historia.audio_url ?? null,
       audioFile: null,
       removeAudio: false,
@@ -101,7 +82,6 @@ export default function AdminHistoriasProfessores() {
   }
 
   function handleCancelarEdicao() {
-    limparPreviewIA()
     setForm(EMPTY_FORM)
   }
 
@@ -125,12 +105,15 @@ export default function AdminHistoriasProfessores() {
 
     let audioUrl = form.removeAudio ? null : form.audioUrl
     let audioFile = form.audioFile
+    const enviouMp3Agora = !!form.audioFile
+    let gerouAutomaticamente = false
 
-    // Sem áudio manual (upload ou "Gerar narração com IA" já clicado) nem removeAudio explícito:
-    // gera a narração automaticamente com a voz padrão configurada, em vez de deixar sem áudio.
+    // Sem MP3 manual nem removeAudio explícito: gera a narração automaticamente com a voz
+    // padrão do gênero escolhido, em vez de deixar sem áudio.
     if (!audioFile && !form.removeAudio && !audioUrl) {
       try {
-        audioFile = await gerarAudioIA(form.texto, getVozPreferida())
+        audioFile = await gerarAudioIA(form.texto, getVozPreferida(form.genero_narrador))
+        gerouAutomaticamente = true
       } catch (err) {
         window.alert(
           'Não foi possível gerar a narração automática (' + err.message + '). A história será salva sem áudio.'
@@ -177,8 +160,13 @@ export default function AdminHistoriasProfessores() {
       cor: form.cor,
       titulo: form.titulo.trim() || null,
       texto: form.texto.trim(),
+      genero_narrador: form.genero_narrador || null,
       audio_url: audioUrl,
       imagem_url: imagemUrl,
+    }
+
+    if (!form.id || enviouMp3Agora || form.removeAudio || gerouAutomaticamente) {
+      payload.audio_manual = enviouMp3Agora
     }
 
     const { error } = form.id
@@ -202,7 +190,6 @@ export default function AdminHistoriasProfessores() {
       await removeStorageFile(form.imagemUrl, IMAGEM_BUCKET)
     }
 
-    limparPreviewIA()
     setForm(EMPTY_FORM)
     carregar()
   }
@@ -244,39 +231,33 @@ export default function AdminHistoriasProfessores() {
         />
       </label>
       <p className="form-hint form-field--full">
-        O texto acima é sempre exibido. Se você não enviar um MP3 nem gerar a narração abaixo, ela é gerada
-        automaticamente com a voz padrão ao salvar — só cai no leitor de voz do navegador se essa geração falhar.
+        O texto acima é sempre exibido. Se você não enviar um MP3, a narração é gerada automaticamente ao
+        salvar com a voz padrão do gênero escolhido abaixo — só cai no leitor de voz do navegador se essa
+        geração falhar.
       </p>
+      <label className="form-field form-field--full">
+        Gênero da voz
+        <select
+          value={form.genero_narrador}
+          onChange={(e) => setForm((f) => ({ ...f, genero_narrador: e.target.value }))}
+        >
+          <option value="">Não definido</option>
+          {GENEROS_NARRADOR.map((g) => (
+            <option key={g.value} value={g.value}>
+              {g.label}
+            </option>
+          ))}
+        </select>
+      </label>
       <label className="form-field form-field--full">
         Áudio MP3 (opcional)
         <input
           type="file"
           accept="audio/mpeg,audio/mp3,.mp3"
-          onChange={(e) => {
-            limparPreviewIA()
-            setForm((f) => ({ ...f, audioFile: e.target.files?.[0] ?? null, removeAudio: false }))
-          }}
+          onChange={(e) => setForm((f) => ({ ...f, audioFile: e.target.files?.[0] ?? null, removeAudio: false }))}
         />
       </label>
-      <div className="form-field--full gerar-audio-ia">
-        <button
-          type="button"
-          className="btn"
-          onClick={handleGerarAudioIA}
-          disabled={gerandoAudioIA || !form.texto.trim()}
-        >
-          {gerandoAudioIA ? 'Gerando narração...' : `🤖 Gerar narração com IA (${labelVoz(getVozPreferida())})`}
-        </button>
-      </div>
-      {iaAudioPreviewUrl && (
-        <div className="form-field--full audio-atual">
-          <span>Narração gerada por IA:</span>
-          <AudioPlayer src={iaAudioPreviewUrl} />
-        </div>
-      )}
-      {form.audioFile && !iaAudioPreviewUrl && (
-        <p className="form-hint form-field--full">Novo arquivo selecionado: {form.audioFile.name}</p>
-      )}
+      {form.audioFile && <p className="form-hint form-field--full">Novo arquivo selecionado: {form.audioFile.name}</p>}
       {!form.audioFile && form.audioUrl && !form.removeAudio && (
         <div className="form-field--full audio-atual">
           <span>Áudio atual:</span>
@@ -326,6 +307,12 @@ export default function AdminHistoriasProfessores() {
           <div className="form-actions">
             <button type="button" className="btn" onClick={() => navigate('/admin')}>
               Histórias alunos
+            </button>
+            <button type="button" className="btn" onClick={() => navigate('/admin/vozes')}>
+              Vozes
+            </button>
+            <button type="button" className="btn" onClick={() => navigate('/admin/importacao')}>
+              Importação em lote
             </button>
             <button type="button" className="btn" onClick={() => navigate('/admin/usuarios')}>
               Usuários
@@ -390,10 +377,15 @@ export default function AdminHistoriasProfessores() {
                 <div className="lista-historias__conteudo">
                   <p className="lista-historias__meta">
                     {labelFaixaProfessor(h.faixa)} · {cor?.label}
+                    {h.genero_narrador && ` · voz ${labelGeneroNarrador(h.genero_narrador).toLowerCase()}`}
                   </p>
                   {h.titulo && <p className="lista-historias__titulo">{h.titulo}</p>}
                   <p className="lista-historias__texto">{h.texto}</p>
-                  {h.audio_url && <p className="lista-historias__meta lista-historias__meta--audio">🎵 tem áudio gravado</p>}
+                  {h.audio_url && (
+                    <p className="lista-historias__meta lista-historias__meta--audio">
+                      🎵 {h.audio_manual ? 'MP3 manual' : 'narração automática'}
+                    </p>
+                  )}
                   {h.imagem_url && <p className="lista-historias__meta lista-historias__meta--audio">🖼️ tem imagem</p>}
                 </div>
                 <div className="lista-historias__acoes">

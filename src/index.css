@@ -830,13 +830,6 @@ body {
   color: var(--texto-suave);
 }
 
-.gerar-audio-ia {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
 .audio-player {
   max-width: 100%;
 }

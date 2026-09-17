@@ -15,6 +15,8 @@ import ProfessorCor from './pages/ProfessorCor'
 import ProfessorHistoria from './pages/ProfessorHistoria'
 import AdminHistoriasProfessores from './pages/AdminHistoriasProfessores'
 import AdminUsuarios from './pages/AdminUsuarios'
+import AdminVozes from './pages/AdminVozes'
+import AdminImportacao from './pages/AdminImportacao'
 
 function App() {
   return (
@@ -48,6 +50,22 @@ function App() {
             element={
               <ProtectedRoute requireRole="admin">
                 <AdminUsuarios />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/vozes"
+            element={
+              <ProtectedRoute requireRole="admin">
+                <AdminVozes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/importacao"
+            element={
+              <ProtectedRoute requireRole="admin">
+                <AdminImportacao />
               </ProtectedRoute>
             }
           />
