@@ -124,12 +124,25 @@ export default function AdminHistoriasProfessores() {
     setSaving(true)
 
     let audioUrl = form.removeAudio ? null : form.audioUrl
+    let audioFile = form.audioFile
 
-    if (form.audioFile) {
-      const path = `${crypto.randomUUID()}-${form.audioFile.name}`
+    // Sem áudio manual (upload ou "Gerar narração com IA" já clicado) nem removeAudio explícito:
+    // gera a narração automaticamente com a voz padrão configurada, em vez de deixar sem áudio.
+    if (!audioFile && !form.removeAudio && !audioUrl) {
+      try {
+        audioFile = await gerarAudioIA(form.texto, getVozPreferida())
+      } catch (err) {
+        window.alert(
+          'Não foi possível gerar a narração automática (' + err.message + '). A história será salva sem áudio.'
+        )
+      }
+    }
+
+    if (audioFile) {
+      const path = `${crypto.randomUUID()}-${audioFile.name}`
       const { error: uploadError } = await supabase.storage
         .from(AUDIO_BUCKET)
-        .upload(path, form.audioFile, { contentType: form.audioFile.type || 'audio/mpeg' })
+        .upload(path, audioFile, { contentType: audioFile.type || 'audio/mpeg' })
 
       if (uploadError) {
         setSaving(false)
@@ -231,8 +244,8 @@ export default function AdminHistoriasProfessores() {
         />
       </label>
       <p className="form-hint form-field--full">
-        O texto acima é sempre exibido e é o que o leitor de voz do navegador lê em voz alta. Se quiser, envie um
-        MP3 gravado abaixo — quando houver um áudio, ele é tocado no lugar do leitor de voz.
+        O texto acima é sempre exibido. Se você não enviar um MP3 nem gerar a narração abaixo, ela é gerada
+        automaticamente com a voz padrão ao salvar — só cai no leitor de voz do navegador se essa geração falhar.
       </p>
       <label className="form-field form-field--full">
         Áudio MP3 (opcional)
