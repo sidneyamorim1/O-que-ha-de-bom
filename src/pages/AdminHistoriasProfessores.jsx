@@ -142,7 +142,7 @@ export default function AdminHistoriasProfessores() {
 
     if (!audioFile && !form.removeAudio && !audioUrl) {
       try {
-        audioFile = await gerarAudioIA(form.texto, getVozPreferida(form.genero_narrador))
+        audioFile = await gerarAudioIA(form.texto, await getVozPreferida(form.genero_narrador, 'professor'))
         gerouAutomaticamente = true
       } catch (err) {
         window.alert(

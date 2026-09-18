@@ -214,6 +214,55 @@ create policy "usuarios_select_self"
 -- que usa a service role key (ignora RLS). Isso evita expor a lista de usuários/emails
 -- pela API pública do Supabase.
 
+-- Voz preferida (feminina/masculina) pra narração por IA, uma dupla própria pra alunos e outra
+-- pra professores — linha única. Antes ficava no localStorage do navegador (por isso "sumia"/
+-- ficava inconsistente ao trocar de navegador ou aba); agora é uma config real no banco.
+create table if not exists public.configuracoes_vozes (
+  id boolean primary key default true,
+  aluno_feminino text,
+  aluno_masculino text,
+  professor_feminino text,
+  professor_masculino text,
+  constraint configuracoes_vozes_singleton check (id)
+);
+
+-- Se a tabela já existia (da primeira versão, só com feminino/masculino compartilhados):
+alter table public.configuracoes_vozes add column if not exists aluno_feminino text;
+alter table public.configuracoes_vozes add column if not exists aluno_masculino text;
+alter table public.configuracoes_vozes add column if not exists professor_feminino text;
+alter table public.configuracoes_vozes add column if not exists professor_masculino text;
+do $$
+begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'configuracoes_vozes' and column_name = 'feminino') then
+    update public.configuracoes_vozes
+      set aluno_feminino = coalesce(aluno_feminino, feminino),
+          aluno_masculino = coalesce(aluno_masculino, masculino),
+          professor_feminino = coalesce(professor_feminino, feminino),
+          professor_masculino = coalesce(professor_masculino, masculino);
+    alter table public.configuracoes_vozes drop column feminino;
+    alter table public.configuracoes_vozes drop column masculino;
+  end if;
+end $$;
+
+insert into public.configuracoes_vozes (id) values (true) on conflict (id) do nothing;
+
+alter table public.configuracoes_vozes enable row level security;
+
+drop policy if exists "configuracoes_vozes_select_authenticated" on public.configuracoes_vozes;
+create policy "configuracoes_vozes_select_authenticated"
+  on public.configuracoes_vozes
+  for select
+  to authenticated
+  using (true);
+
+drop policy if exists "configuracoes_vozes_update_authenticated" on public.configuracoes_vozes;
+create policy "configuracoes_vozes_update_authenticated"
+  on public.configuracoes_vozes
+  for update
+  to authenticated
+  using (true)
+  with check (true);
+
 -- Depois de rodar este script, crie o primeiro usuário admin em:
 -- Authentication > Users > Add user (email + senha)
 -- e depois insira o perfil dele manualmente (troque o email abaixo):

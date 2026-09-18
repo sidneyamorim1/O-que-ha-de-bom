@@ -1,3 +1,5 @@
+import { supabase } from '../lib/supabaseClient'
+
 export const FAIXAS_ETARIAS = [
   { value: '10-16', label: '10 a 16', emoji: '🧒', hint: 'Jovens exploradores' },
   { value: '17-20', label: '17 a 20', emoji: '🎓', hint: 'Novos caminhos' },
@@ -86,45 +88,47 @@ export const VOZES_TTS = [
   { name: 'pt-BR-Chirp3-HD-Zubenelgenubi', genero: 'Masculina' },
 ]
 
-// Preferência de voz: uma voz padrão pra narrador feminino e outra pra masculino, compartilhadas
-// entre alunos e professores. Guardado como { feminino: '...', masculino: '...' }.
-const VOZES_CONFIG_KEY = 'oQueHaDeBom.vozesTts'
-
-function lerConfigVozes() {
-  const vazio = { feminino: null, masculino: null }
-  try {
-    const raw = localStorage.getItem(VOZES_CONFIG_KEY)
-    if (!raw) return vazio
-    const parsed = JSON.parse(raw)
-    return { feminino: parsed.feminino ?? null, masculino: parsed.masculino ?? null }
-  } catch {
-    return vazio
-  }
-}
-
-function salvarConfigVozes(config) {
-  try {
-    localStorage.setItem(VOZES_CONFIG_KEY, JSON.stringify(config))
-  } catch {
-    // localStorage indisponível (modo privado, etc.) — segue sem persistir
-  }
-}
-
 const VOZ_FEMININA_PADRAO = VOZES_TTS.find((v) => v.genero === 'Feminina')?.name ?? VOZES_TTS[0].name
 const VOZ_MASCULINA_PADRAO = VOZES_TTS.find((v) => v.genero === 'Masculina')?.name ?? VOZES_TTS[0].name
 
-// Voz configurada pro gênero de narrador informado (feminino/masculino). Sem gênero, cai na
-// voz feminina padrão. Vale igual pra histórias de alunos e de professores.
-export function getVozPreferida(generoNarrador) {
-  const config = lerConfigVozes()
-  if (generoNarrador === 'masculino') return config.masculino || VOZ_MASCULINA_PADRAO
-  return config.feminino || VOZ_FEMININA_PADRAO
+export const CONTEXTOS_VOZ = [
+  { value: 'aluno', label: 'Alunos' },
+  { value: 'professor', label: 'Professores' },
+]
+
+function colunaVoz(generoNarrador, contexto) {
+  const genero = generoNarrador === 'masculino' ? 'masculino' : 'feminino'
+  const publico = contexto === 'professor' ? 'professor' : 'aluno'
+  return `${publico}_${genero}`
 }
 
-export function setVozPreferida(nomeVoz, generoNarrador) {
-  const config = lerConfigVozes()
-  config[generoNarrador === 'masculino' ? 'masculino' : 'feminino'] = nomeVoz
-  salvarConfigVozes(config)
+// Preferência de voz: uma dupla feminina/masculina pra alunos e outra pra professores — e igual
+// em qualquer computador/navegador usado pra administrar (guardada no Supabase, não no
+// localStorage, já que o app roda em vários PCs de escola).
+export async function carregarVozesConfig() {
+  const vazio = { aluno_feminino: null, aluno_masculino: null, professor_feminino: null, professor_masculino: null }
+  const { data, error } = await supabase
+    .from('configuracoes_vozes')
+    .select('aluno_feminino, aluno_masculino, professor_feminino, professor_masculino')
+    .eq('id', true)
+    .maybeSingle()
+  if (error || !data) return vazio
+  return { ...vazio, ...data }
+}
+
+// Voz configurada pro gênero de narrador (feminino/masculino) e público (aluno/professor)
+// informados. Sem valor salvo, cai na voz feminina padrão do catálogo.
+export async function getVozPreferida(generoNarrador, contexto = 'aluno') {
+  const config = await carregarVozesConfig()
+  const salva = config[colunaVoz(generoNarrador, contexto)]
+  if (salva) return salva
+  return generoNarrador === 'masculino' ? VOZ_MASCULINA_PADRAO : VOZ_FEMININA_PADRAO
+}
+
+export async function setVozPreferida(nomeVoz, generoNarrador, contexto = 'aluno') {
+  const coluna = colunaVoz(generoNarrador, contexto)
+  const { error } = await supabase.from('configuracoes_vozes').update({ [coluna]: nomeVoz }).eq('id', true)
+  if (error) throw error
 }
 
 export function labelVoz(nomeVoz) {

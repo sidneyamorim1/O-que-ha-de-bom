@@ -221,6 +221,21 @@ body {
   gap: 12px;
 }
 
+.modal-progress-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.modal-progress-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--acento-secundario), var(--verde-escuro));
+  transition: width 0.3s ease;
+}
+
 /* ===== TÍTULO PRINCIPAL ===== */
 .titulo {
   color: #fff;
@@ -1053,12 +1068,6 @@ body {
   border-color: rgba(240, 212, 0, 0.3);
 }
 
-.admin-tag-categoria--batch {
-  background: rgba(240, 138, 0, 0.15);
-  color: #fb923c;
-  border-color: rgba(240, 138, 0, 0.3);
-}
-
 .admin-section-title {
   font-size: 24px;
   font-weight: 800;
@@ -1594,60 +1603,37 @@ body {
   box-shadow: var(--glass-shadow);
 }
 
+.admin-glass-panel--aluno {
+  border-top: 3px solid #38bdf8;
+}
+
+.admin-glass-panel--prof {
+  border-top: 3px solid #c3e820;
+}
+
+.admin-glass-panel--aluno .voice-card {
+  border-left: 3px solid rgba(56, 189, 248, 0.4);
+}
+
+.admin-glass-panel--prof .voice-card {
+  border-left: 3px solid rgba(195, 232, 32, 0.4);
+}
+
+.admin-glass-panel--aluno .btn--primary,
+.admin-glass-panel--aluno .modal-progress-bar__fill {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+}
+
+.admin-glass-panel--prof .btn--primary,
+.admin-glass-panel--prof .modal-progress-bar__fill {
+  background: linear-gradient(135deg, #c3e820, #a9c90b);
+}
+
 .admin-batch-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 16px;
   margin-top: 14px;
-}
-
-.admin-batch-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.admin-batch-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.admin-batch-card__title {
-  font-size: 16px;
-  font-weight: 700;
-  margin: 0;
-  color: #fff;
-}
-
-.admin-batch-card__badge {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 4px;
-  background: rgba(240, 138, 0, 0.15);
-  color: #fb923c;
-  border: 1px solid rgba(240, 138, 0, 0.3);
-}
-
-.admin-batch-card__desc {
-  font-size: 13px;
-  color: var(--texto-suave);
-  margin: 0;
-  line-height: 1.4;
-}
-
-.admin-batch-card__actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 4px;
-}
-
-.btn--batch {
-  font-size: 13px;
-  padding: 8px 14px;
 }
 
 .voice-tester__header {
@@ -1696,6 +1682,7 @@ body {
 .voice-card__actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
