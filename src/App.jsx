@@ -25,9 +25,30 @@ function App() {
         <ScrollToTop />
         <Particles />
         <Routes>
-          <Route path="/" element={<Tela1Idade />} />
-          <Route path="/roleta" element={<Tela2Cor />} />
-          <Route path="/historia" element={<Tela3Historia />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute redirectTo="/login">
+                <Tela1Idade />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/roleta"
+            element={
+              <ProtectedRoute redirectTo="/login">
+                <Tela2Cor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/historia"
+            element={
+              <ProtectedRoute redirectTo="/login">
+                <Tela3Historia />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route
             path="/admin"

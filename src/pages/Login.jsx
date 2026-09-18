@@ -25,17 +25,15 @@ export default function Login() {
   }
 
   return (
-    <div className="page">
+    <div className="page page--single-screen">
       <div className="card card--admin">
-        <div className="titulo-wrapper">
-          <img src={logo} alt="O que há de Bom?" className="titulo-logo" />
-          <h1 className="titulo">
-            O que há de
-            <br />
-            BOM?
+        <div className="titulo-wrapper titulo-wrapper--compacto">
+          <img src={logo} alt="O que há de Bom?" className="titulo-logo titulo-logo--otimizado" />
+          <h1 className="titulo titulo--principal">
+            O que há de <span>BOM?</span>
           </h1>
         </div>
-        <p className="subtitulo">Faça login para continuar</p>
+        <p className="subtitulo subtitulo--clean">Faça login para continuar</p>
         <form className="form" onSubmit={handleSubmit}>
           <label className="form-field">
             Email

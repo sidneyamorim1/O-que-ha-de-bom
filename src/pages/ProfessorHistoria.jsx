@@ -54,20 +54,12 @@ function Historia({ faixa, cor }) {
     navigate(`/professores/${faixa}/cor`)
   }
 
-  function handleSortearOutra() {
-    setResultado({ status: 'loading', historia: null })
-    buscar()
-  }
-
   const corInfoAtual = corInfo(cor)
 
   return (
-    <div className="page page--historia">
+    <div className="page page--single-screen page--historia">
       <div className="card card--historia-card" style={{ '--cor-tema': corInfoAtual?.hex || '#f7c948' }}>
         <div className="historia-top-bar">
-          <span className="historia-badge historia-badge--prof">
-            👨‍🏫 Faixa {labelFaixaProfessor(faixa)}
-          </span>
           {corInfoAtual && (
             <span className="historia-badge historia-badge--cor">
               <span className="cor-ponto" style={{ backgroundColor: corInfoAtual.hex }} />
@@ -101,31 +93,34 @@ function Historia({ faixa, cor }) {
         )}
 
         {status === 'ok' && historia && (
-          <div className="historia-reveal">
-            {historia.titulo && <h2 className="historia-titulo">{historia.titulo}</h2>}
-
-            {historia.imagem_url && (
-              <div className="historia-imagem-wrap">
-                <img
-                  src={historia.imagem_url}
-                  alt={historia.titulo || 'Ilustração'}
-                  className="historia-imagem"
-                />
-              </div>
-            )}
-
-            <div className="historia-audio-wrapper">
-              {historia.audio_url ? (
-                <AudioPlayer src={historia.audio_url} />
-              ) : (
-                <TextToSpeechPlayer texto={historia.texto} />
+          <div className="historia-grid">
+            <div className="historia-col historia-col--media">
+              {historia.imagem_url && (
+                <div className="historia-imagem-wrap">
+                  <img
+                    src={historia.imagem_url}
+                    alt={historia.titulo || 'Ilustração'}
+                    className="historia-imagem"
+                  />
+                </div>
               )}
+
+              <div className="historia-audio-wrapper">
+                {historia.audio_url ? (
+                  <AudioPlayer src={historia.audio_url} />
+                ) : (
+                  <TextToSpeechPlayer texto={historia.texto} />
+                )}
+              </div>
             </div>
 
-            <div className="historia-texto-box">
-              <span className="historia-aspas historia-aspas--abre">“</span>
-              <p className="historia-texto">{historia.texto}</p>
-              <span className="historia-aspas historia-aspas--fecha">”</span>
+            <div className="historia-col historia-col--texto">
+              {historia.titulo && <h2 className="historia-titulo">{historia.titulo}</h2>}
+              <div className="historia-texto-box">
+                <span className="historia-aspas historia-aspas--abre">“</span>
+                <p className="historia-texto">{historia.texto}</p>
+                <span className="historia-aspas historia-aspas--fecha">”</span>
+              </div>
             </div>
           </div>
         )}
@@ -137,14 +132,6 @@ function Historia({ faixa, cor }) {
             onClick={handleJogarNovamente}
           >
             🎲 Girar a roleta novamente
-          </button>
-          <button
-            type="button"
-            className="btn btn--secundario btn--full"
-            onClick={handleSortearOutra}
-            disabled={status === 'loading'}
-          >
-            🔄 Outra história desta cor
           </button>
         </div>
       </div>

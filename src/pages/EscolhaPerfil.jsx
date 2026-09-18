@@ -58,7 +58,6 @@ export default function EscolhaPerfil() {
           >
             <div className="card-perfil-item__icon">👩‍🏫</div>
             <div className="card-perfil-item__info">
-              <span className="card-perfil-item__badge">Formação & Prática</span>
               <h3 className="card-perfil-item__title">Professores</h3>
               <p className="card-perfil-item__desc">
                 Jornada pedagógica, histórias formativas e reflexões para educadores.
@@ -74,7 +73,6 @@ export default function EscolhaPerfil() {
           >
             <div className="card-perfil-item__icon">🧒</div>
             <div className="card-perfil-item__info">
-              <span className="card-perfil-item__badge">Jogo de Tabuleiro</span>
               <h3 className="card-perfil-item__title">Alunos</h3>
               <p className="card-perfil-item__desc">
                 Sorteio da roleta, desafios de cores e narrações para a turma.

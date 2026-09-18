@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { CORES, FAIXAS_PROFESSOR, labelFaixaProfessor } from '../constants/gameData'
+import { CORES, FAIXAS_PROFESSOR } from '../constants/gameData'
 import ColorSwatchButton from '../components/ColorSwatchButton'
 import logo from '../assets/logo/logo.webp'
 
@@ -19,9 +19,6 @@ export default function ProfessorCor() {
     <div className="page page--single-screen">
       <div className="card card--roleta">
         <div className="game-card-topbar">
-          <span className="game-card-tag game-card-tag--prof">
-            🎓 Educadores • Faixa <strong>{labelFaixaProfessor(faixa)}</strong>
-          </span>
           <button type="button" className="game-card-link" onClick={() => navigate('/escolha/professores')}>
             Trocar faixa
           </button>

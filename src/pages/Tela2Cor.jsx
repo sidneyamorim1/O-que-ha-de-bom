@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CORES, labelFaixaEtaria } from '../constants/gameData'
+import { CORES } from '../constants/gameData'
 import { useApp } from '../context/AppContext'
 import ColorSwatchButton from '../components/ColorSwatchButton'
 import { anteciparHistorias } from '../lib/historias'
@@ -31,9 +31,6 @@ export default function Tela2Cor() {
     <div className="page page--single-screen">
       <div className="card card--roleta">
         <div className="game-card-topbar">
-          <span className="game-card-tag">
-            🧒 Faixa selecionada: <strong>{labelFaixaEtaria(selectedAge)} anos</strong>
-          </span>
           <button type="button" className="game-card-link" onClick={() => navigate('/')}>
             Trocar idade
           </button>

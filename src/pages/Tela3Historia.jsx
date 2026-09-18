@@ -62,22 +62,10 @@ function Historia({ selectedAge, selectedColor }) {
     navigate('/roleta')
   }
 
-  function handleSortearOutra() {
-    setResultado({ status: 'loading', historia: null })
-    carregarHistorias(selectedAge, selectedColor)
-      .then((historias) => {
-        setResultado(sortear(historias))
-      })
-      .catch((error) => {
-        console.error(error)
-        setResultado({ status: 'error', historia: null })
-      })
-  }
-
   const cor = corInfo(selectedColor)
 
   return (
-    <div className="page page--historia">
+    <div className="page page--single-screen page--historia">
       <div className="card card--historia-card" style={{ '--cor-tema': cor?.hex || '#f7c948' }}>
         {/* Cabeçalho da carta do jogo com metadados */}
         <div className="historia-top-bar historia-top-bar--fim">
@@ -114,33 +102,34 @@ function Historia({ selectedAge, selectedColor }) {
         )}
 
         {status === 'ok' && historia && (
-          <div className="historia-reveal">
-            {historia.titulo && <h2 className="historia-titulo">{historia.titulo}</h2>}
-
-            {historia.imagem_url && (
-              <div className="historia-imagem-wrap">
-                <img
-                  src={historia.imagem_url}
-                  alt={historia.titulo || 'Ilustração da história'}
-                  className="historia-imagem"
-                />
-              </div>
-            )}
-
-            {/* Reprodutor de áudio lúdico ou leitor TTS */}
-            <div className="historia-audio-wrapper">
-              {historia.audio_url ? (
-                <AudioPlayer src={historia.audio_url} />
-              ) : (
-                <TextToSpeechPlayer texto={historia.texto} />
+          <div className="historia-grid">
+            <div className="historia-col historia-col--media">
+              {historia.imagem_url && (
+                <div className="historia-imagem-wrap">
+                  <img
+                    src={historia.imagem_url}
+                    alt={historia.titulo || 'Ilustração da história'}
+                    className="historia-imagem"
+                  />
+                </div>
               )}
+
+              <div className="historia-audio-wrapper">
+                {historia.audio_url ? (
+                  <AudioPlayer src={historia.audio_url} />
+                ) : (
+                  <TextToSpeechPlayer texto={historia.texto} />
+                )}
+              </div>
             </div>
 
-            {/* Texto da história com tipografia expandida e legível */}
-            <div className="historia-texto-box">
-              <span className="historia-aspas historia-aspas--abre">“</span>
-              <p className="historia-texto">{historia.texto}</p>
-              <span className="historia-aspas historia-aspas--fecha">”</span>
+            <div className="historia-col historia-col--texto">
+              {historia.titulo && <h2 className="historia-titulo">{historia.titulo}</h2>}
+              <div className="historia-texto-box">
+                <span className="historia-aspas historia-aspas--abre">“</span>
+                <p className="historia-texto">{historia.texto}</p>
+                <span className="historia-aspas historia-aspas--fecha">”</span>
+              </div>
             </div>
           </div>
         )}
@@ -153,14 +142,6 @@ function Historia({ selectedAge, selectedColor }) {
             onClick={handleJogarNovamente}
           >
             🎲 Girar a roleta novamente
-          </button>
-          <button
-            type="button"
-            className="btn btn--secundario btn--full"
-            onClick={handleSortearOutra}
-            disabled={status === 'loading'}
-          >
-            🔄 Outra história desta cor
           </button>
         </div>
       </div>

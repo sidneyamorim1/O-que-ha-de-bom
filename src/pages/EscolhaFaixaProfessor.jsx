@@ -9,7 +9,6 @@ export default function EscolhaFaixaProfessor() {
     <div className="page page--single-screen">
       <div className="card card--admin">
         <div className="game-card-topbar">
-          <span className="game-card-tag game-card-tag--prof">🎓 Modo Educador</span>
           <button type="button" className="game-card-link" onClick={() => navigate('/escolha')}>
             Trocar perfil
           </button>

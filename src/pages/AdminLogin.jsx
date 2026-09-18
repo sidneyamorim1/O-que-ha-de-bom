@@ -23,17 +23,15 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="page">
+    <div className="page page--single-screen">
       <div className="card card--admin">
-        <div className="titulo-wrapper">
+        <div className="titulo-wrapper titulo-wrapper--compacto">
           <span className="titulo-emoji">🔐</span>
-          <h1 className="titulo">
-            O que há de
-            <br />
-            BOM?
+          <h1 className="titulo titulo--principal">
+            O que há de <span>BOM?</span>
           </h1>
         </div>
-        <p className="subtitulo">Login administrativo</p>
+        <p className="subtitulo subtitulo--clean">Login administrativo</p>
         <form className="form" onSubmit={handleSubmit}>
           <label className="form-field">
             Email

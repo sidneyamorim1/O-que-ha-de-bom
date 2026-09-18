@@ -9,7 +9,6 @@ export default function Tela1Idade() {
   const navigate = useNavigate()
   const { setSelectedAge, setSelectedColor } = useApp()
   const [rodape, setRodape] = useState(null) // null | 'voltar' | 'sair'
-  const [estaLogado, setEstaLogado] = useState(false)
 
   useEffect(() => {
     let active = true
@@ -17,11 +16,7 @@ export default function Tela1Idade() {
     async function carregarRodape() {
       const { data: sessionData } = await supabase.auth.getSession()
       const userId = sessionData.session?.user?.id
-      if (!userId) {
-        if (active) setEstaLogado(false)
-        return
-      }
-      if (active) setEstaLogado(true)
+      if (!userId) return
 
       const { data } = await supabase.from('usuarios').select('papel').eq('id', userId).maybeSingle()
       if (active) setRodape(data?.papel === 'aluno' ? 'sair' : 'voltar')
@@ -47,21 +42,6 @@ export default function Tela1Idade() {
   return (
     <div className="page page--single-screen">
       <div className="card card--idade">
-        {/* Barra sutil de navegação no topo do card */}
-        <div className="game-card-topbar">
-          <span className="game-card-tag">🎲 Tabuleiro Interativo</span>
-          {!estaLogado && (
-            <button
-              type="button"
-              className="game-card-link"
-              onClick={() => navigate('/login')}
-              title="Acesso para educadores e administradores"
-            >
-              Área do Professor 👨‍🏫
-            </button>
-          )}
-        </div>
-
         <div className="titulo-wrapper titulo-wrapper--compacto">
           <img src={logo} alt="O que há de Bom?" className="titulo-logo titulo-logo--otimizado" />
           <h1 className="titulo titulo--principal">

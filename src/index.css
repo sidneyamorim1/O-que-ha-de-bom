@@ -158,6 +158,7 @@ body {
 
 .card--admin {
   max-width: 520px;
+  padding: clamp(22px, 3.8vh, 36px) clamp(20px, 4vw, 36px);
 }
 
 .card--admin.card--wide {
@@ -419,7 +420,8 @@ body {
 /* ===== GRID DE CORES ===== */
 .grid-cores {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 90px));
+  justify-content: center;
   gap: 12px;
   max-width: 660px;
   margin: 0 auto 32px;
@@ -2190,6 +2192,19 @@ body {
   .titulo {
     font-size: 32px;
   }
+
+  .card--historia-card {
+    padding: clamp(16px, 3vh, 24px) 16px;
+    border-radius: 20px;
+  }
+
+  .historia-imagem {
+    max-height: clamp(110px, 20vh, 170px);
+  }
+
+  .historia-texto-box {
+    padding: 16px 18px;
+  }
 }
 
 /* ===== OTIMIZAÇÃO DAS TELAS DO JOGO & HISTÓRIA ===== */
@@ -2228,7 +2243,7 @@ body {
 .game-card-topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-bottom: 12px;
   gap: 10px;
   flex-wrap: wrap;
@@ -2278,7 +2293,7 @@ body {
 }
 
 .card--roleta {
-  max-width: 680px;
+  max-width: 620px;
   padding: clamp(22px, 3.8vh, 36px) clamp(20px, 4vw, 36px);
 }
 
@@ -2364,14 +2379,96 @@ body {
   font-weight: 800;
 }
 
-/* ===== TELA DA HISTÓRIA MODERNA ===== */
+/* ===== TELA DA HISTÓRIA MODERNA (layout em duas colunas: mídia à esquerda, texto à direita) ===== */
 .card--historia-card {
-  max-width: 580px;
+  max-width: 900px;
   width: 100%;
-  padding: clamp(20px, 3vh, 32px) clamp(18px, 3.5vw, 32px);
+  padding: clamp(20px, 3vh, 32px) clamp(22px, 4vw, 38px);
   border-top: 4px solid var(--cor-tema, var(--acento-primario));
   box-shadow: 0 14px 44px rgba(0, 0, 0, 0.45);
   animation: pageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.historia-grid {
+  display: grid;
+  grid-template-columns: minmax(0, min(320px, 34%)) minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 32px);
+  align-items: stretch;
+  text-align: left;
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.historia-col--media {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  min-width: 0;
+}
+
+.historia-col--media .historia-imagem-wrap {
+  margin-bottom: 0;
+  flex: 1;
+  min-height: 200px;
+}
+
+.historia-col--media .historia-imagem {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+}
+
+.historia-col--texto {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.historia-col--texto .historia-titulo {
+  text-align: left;
+}
+
+.historia-col--texto .historia-texto-box {
+  margin-bottom: 0;
+  max-height: min(52vh, 460px);
+  overflow-y: auto;
+}
+
+.card--historia-card .historia-acoes-rodape {
+  align-items: center;
+}
+
+.card--historia-card .historia-acoes-rodape .btn {
+  width: auto;
+  min-width: 260px;
+  padding: 12px 32px;
+}
+
+@media (max-width: 720px) {
+  .historia-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card--historia-card .historia-acoes-rodape .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .historia-col--media {
+    height: auto;
+  }
+
+  .historia-col--media .historia-imagem-wrap {
+    flex: none;
+  }
+
+  .historia-col--media .historia-imagem {
+    height: auto;
+    max-height: clamp(140px, 24vh, 220px);
+  }
 }
 
 .historia-top-bar {
@@ -2467,7 +2564,7 @@ body {
 }
 
 .historia-texto {
-  font-size: clamp(15px, 2.2vw, 17px);
+  font-size: clamp(14px, 2.2vw, 17px);
   line-height: 1.7;
   color: #f0f0f8;
   margin: 0;
