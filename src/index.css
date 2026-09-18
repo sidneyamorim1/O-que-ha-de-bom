@@ -157,7 +157,7 @@ body {
 }
 
 .card--admin {
-  max-width: 520px;
+  max-width: clamp(520px, 34vw, 660px);
   padding: clamp(22px, 3.8vh, 36px) clamp(20px, 4vw, 36px);
 }
 
@@ -2288,17 +2288,17 @@ body {
 
 /* Card de Idade compacto */
 .card--idade {
-  max-width: 680px;
+  max-width: clamp(680px, 46vw, 880px);
   padding: clamp(22px, 3.8vh, 36px) clamp(20px, 4vw, 36px);
 }
 
 .card--roleta {
-  max-width: 620px;
+  max-width: clamp(620px, 42vw, 820px);
   padding: clamp(22px, 3.8vh, 36px) clamp(20px, 4vw, 36px);
 }
 
 .card--perfil {
-  max-width: 600px;
+  max-width: clamp(600px, 40vw, 780px);
   padding: clamp(24px, 4vh, 38px) clamp(20px, 4vw, 36px);
 }
 
@@ -2381,7 +2381,7 @@ body {
 
 /* ===== TELA DA HISTÓRIA MODERNA (layout em duas colunas: mídia à esquerda, texto à direita) ===== */
 .card--historia-card {
-  max-width: 900px;
+  max-width: clamp(900px, 56vw, 1160px);
   width: 100%;
   padding: clamp(20px, 3vh, 32px) clamp(22px, 4vw, 38px);
   border-top: 4px solid var(--cor-tema, var(--acento-primario));
